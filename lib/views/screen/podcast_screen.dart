@@ -27,7 +27,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
       final response = await http.get(
         Uri.parse('https://stereo98.com/wp-json/stereo98/v1/podcast?per_page=50'),
       ).timeout(const Duration(seconds: 10));
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final list = List<Map<String, dynamic>>.from(data['podcast'] ?? []);
@@ -48,11 +47,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        // ✅ Nessuna freccia indietro automatica
         automaticallyImplyLeading: false,
         title: const Text('Podcast', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        // ✅ Tasto X in alto a destra per tornare alla home
         actions: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
@@ -83,6 +80,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                       final date = p['podcast_date'] ?? p['data_pubblicazione'] ?? '';
                       final audioUrl = p['audio_url'] ?? p['resource_url'] ?? '';
                       final webUrl = p['url'] ?? '';
+                      final urlToOpen = audioUrl.isNotEmpty ? audioUrl : webUrl;
 
                       return Container(
                         margin: EdgeInsets.only(bottom: 12.h),
@@ -94,9 +92,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                               const Color(0xFF4EC8E8).withOpacity(0.05),
                             ],
                           ),
-                          border: Border.all(
-                            color: const Color(0xFFD85D9D).withOpacity(0.3),
-                          ),
+                          border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
                         ),
                         child: ListTile(
                           contentPadding: EdgeInsets.all(10.w),
@@ -107,12 +103,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     errorBuilder: (_, __, ___) => _placeholder())
                                 : _placeholder(),
                           ),
-                          title: Text(
-                            title,
+                          title: Text(title,
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                            maxLines: 2, overflow: TextOverflow.ellipsis),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -125,7 +118,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           trailing: IconButton(
                             icon: const Icon(Icons.play_circle_filled, color: Color(0xFFD85D9D), size: 36),
                             onPressed: () async {
-                              final url = Uri.parse(audioUrl.isNotEmpty ? audioUrl : webUrl);
+                              final url = Uri.parse(urlToOpen);
                               if (await canLaunchUrl(url)) {
                                 await launchUrl(url, mode: LaunchMode.externalApplication);
                               }
@@ -152,20 +145,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   String _fixText(String text) {
     return text
-      .replaceAll('&#8217;', "'")
-      .replaceAll('&#8216;', "'")
-      .replaceAll('&#8220;', '"')
-      .replaceAll('&#8221;', '"')
-      .replaceAll('&#8211;', '–')
-      .replaceAll('&#8212;', '—')
-      .replaceAll('&#038;', '&')
-      .replaceAll('&amp;', '&')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&apos;', "'")
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
+      .replaceAll('&#8217;', "'").replaceAll('&#8216;', "'")
+      .replaceAll('&#8220;', '"').replaceAll('&#8221;', '"')
+      .replaceAll('&#8211;', '–').replaceAll('&#8212;', '—')
+      .replaceAll('&#038;', '&').replaceAll('&amp;', '&')
+      .replaceAll('&quot;', '"').replaceAll('&apos;', "'")
+      .replaceAll('&lt;', '<').replaceAll('&gt;', '>')
       .replaceAll('&hellip;', '…')
-      .replaceAll('[&hellip;]', '…')
       .replaceAll(RegExp(r'<[^>]*>'), '');
   }
 }
