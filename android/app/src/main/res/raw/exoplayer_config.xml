@@ -1,0 +1,2 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LoadControl minBufferMs="15000" maxBufferMs="50000" bufferForPlaybackMs="5000" bufferForPlaybackAfterRebufferMs="10000"/>

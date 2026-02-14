@@ -1,0 +1,14 @@
+{
+  "studi": [
+    {
+      "firma": "STP Stereo 98",
+      "nome": "Studio Piemonte",
+      "whatsapp": "+393532156811"
+    },
+    {
+      "firma": "STL Stereo 98",
+      "nome": "Studio Lazio",
+      "whatsapp": "+393883758240"
+    }
+  ]
+}
