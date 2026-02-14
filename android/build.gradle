@@ -4,7 +4,7 @@
 //         google()
 //         mavenCentral()
 //     }
-
+//
 //     dependencies {
 //         classpath 'com.android.tools.build:gradle:7.3.0'
 //         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -19,6 +19,7 @@ allprojects {
 }
 
 rootProject.buildDir = '../build'
+
 subprojects {
     afterEvaluate { project ->
         if (project.plugins.hasPlugin("com.android.application") ||
@@ -30,11 +31,18 @@ subprojects {
     }
 }
 
+// Escludi il modulo web di assets_audio_player dalla build Android
+subprojects {
+    project.configurations.all { config ->
+        config.exclude group: 'com.github.fluttify', module: 'assets_audio_player_web'
+    }
+}
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
-    
     project.evaluationDependsOn(':app')
 }
 
