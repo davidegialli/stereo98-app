@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:animate_icons/animate_icons.dart';
-import 'package:assets_audio_player_updated/assets_audio_player.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -101,7 +101,8 @@ class HomeController extends GetxController {
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        // Fix: decodifica esplicita UTF-8
+        final data = json.decode(utf8.decode(response.bodyBytes));
         String title = 'Stereo 98 DAB+';
         String artist = 'In diretta';
 
@@ -146,77 +147,81 @@ class HomeController extends GetxController {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        // Fix: decodifica esplicita UTF-8 per caratteri accentati (ì, è, ecc.)
+        final data = json.decode(utf8.decode(response.bodyBytes));
         final palinsesto = data['palinsesto'] as List?;
 
         if (palinsesto != null) {
           final now = DateTime.now();
-          final dayNames = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-          final today = dayNames[now.weekday - 1];
+          // Fix: usa indice numerico invece di confronto stringa giorni
+          // DateTime.weekday: 1=Lunedì...7=Domenica → indice array 0-6
+          final dayIndex = now.weekday - 1;
 
-          for (final giorno in palinsesto) {
-            if (giorno['giorno']?.toString() == today) {
-              final shows = giorno['shows'] as List? ?? [];
-              bool foundCurrent = false;
+          if (dayIndex < palinsesto.length) {
+            final giorno = palinsesto[dayIndex];
+            final shows = giorno['shows'] as List? ?? [];
+            bool foundCurrent = false;
 
-              for (int i = 0; i < shows.length; i++) {
-                final show = shows[i];
+            for (int i = 0; i < shows.length; i++) {
+              final show = shows[i];
+              final start = show['orario_inizio']?.toString().split(':');
+              final end = show['orario_fine']?.toString().split(':');
+
+              if (start != null && end != null && start.length >= 2 && end.length >= 2) {
+                final startMin = int.parse(start[0]) * 60 + int.parse(start[1]);
+                // Fix: gestione show che finiscono a mezzanotte (00:00 = 1440)
+                var endMin = int.parse(end[0]) * 60 + int.parse(end[1]);
+                if (endMin == 0) endMin = 1440;
+                final nowMin = now.hour * 60 + now.minute;
+
+                if (nowMin >= startMin && nowMin < endMin) {
+                  showName.value = _fixEncoding(show['show_nome'] ?? '');
+                  showImage.value = show['show_immagine']?.toString() ?? '';
+                  foundCurrent = true;
+
+                  final wa = show['whatsapp']?.toString() ?? '';
+                  whatsappNumber.value = wa;
+                  whatsappStudio.value = wa.isNotEmpty ? (_studioNomi[wa] ?? '') : '';
+
+                  final desc = _fixEncoding(show['show_descrizione'] ?? '');
+                  showDescription.value = desc;
+
+                  if (i + 1 < shows.length) {
+                    final next = shows[i + 1];
+                    nextShowName.value = _fixEncoding(next['show_nome'] ?? '');
+                    nextShowTime.value = next['orario_inizio'] ?? '';
+                  } else {
+                    nextShowName.value = '';
+                    nextShowTime.value = '';
+                  }
+                  break;
+                }
+              }
+            }
+
+            if (!foundCurrent) {
+              showName.value = '';
+              showImage.value = '';
+              showDescription.value = '';
+              whatsappNumber.value = '';
+              whatsappStudio.value = '';
+              nextShowName.value = '';
+              nextShowTime.value = '';
+              final nowMin = now.hour * 60 + now.minute;
+              for (final show in shows) {
                 final start = show['orario_inizio']?.toString().split(':');
-                final end = show['orario_fine']?.toString().split(':');
-
-                if (start != null && end != null && start.length >= 2 && end.length >= 2) {
+                if (start != null && start.length >= 2) {
                   final startMin = int.parse(start[0]) * 60 + int.parse(start[1]);
-                  final endMin = int.parse(end[0]) * 60 + int.parse(end[1]);
-                  final nowMin = now.hour * 60 + now.minute;
-
-                  if (nowMin >= startMin && nowMin < endMin) {
-                    showName.value = _fixEncoding(show['show_nome'] ?? '');
-                    showImage.value = show['show_immagine']?.toString() ?? '';
-                    foundCurrent = true;
-
-                    final wa = show['whatsapp']?.toString() ?? '';
-                    whatsappNumber.value = wa;
-                    whatsappStudio.value = wa.isNotEmpty ? (_studioNomi[wa] ?? '') : '';
-
-                    final desc = _fixEncoding(show['show_descrizione'] ?? '');
-                    showDescription.value = desc;
-
-                    if (i + 1 < shows.length) {
-                      final next = shows[i + 1];
-                      nextShowName.value = _fixEncoding(next['show_nome'] ?? '');
-                      nextShowTime.value = next['orario_inizio'] ?? '';
-                    } else {
-                      nextShowName.value = '';
-                      nextShowTime.value = '';
-                    }
+                  if (startMin > nowMin) {
+                    nextShowName.value = _fixEncoding(show['show_nome'] ?? '');
+                    nextShowTime.value = show['orario_inizio'] ?? '';
                     break;
                   }
                 }
               }
-
-              if (!foundCurrent) {
-                showName.value = '';
-                showImage.value = '';
-                showDescription.value = '';
-                whatsappNumber.value = '';
-                whatsappStudio.value = '';
-                final nowMin = now.hour * 60 + now.minute;
-                for (final show in shows) {
-                  final start = show['orario_inizio']?.toString().split(':');
-                  if (start != null && start.length >= 2) {
-                    final startMin = int.parse(start[0]) * 60 + int.parse(start[1]);
-                    if (startMin > nowMin) {
-                      nextShowName.value = _fixEncoding(show['show_nome'] ?? '');
-                      nextShowTime.value = show['orario_inizio'] ?? '';
-                      break;
-                    }
-                  }
-                }
-              }
-
-              update();
-              break;
             }
+
+            update();
           }
         }
       }
@@ -250,18 +255,18 @@ class HomeController extends GetxController {
     return text
       .replaceAll('&#8217;', "'")
       .replaceAll('&#8216;', "'")
-      .replaceAll('&#8220;', '"')
-      .replaceAll('&#8221;', '"')
-      .replaceAll('&#8211;', '–')
-      .replaceAll('&#8212;', '—')
+      .replaceAll('&#8220;', '\u201C')
+      .replaceAll('&#8221;', '\u201D')
+      .replaceAll('&#8211;', '\u2013')
+      .replaceAll('&#8212;', '\u2014')
       .replaceAll('&#038;', '&')
       .replaceAll('&amp;', '&')
       .replaceAll('&quot;', '"')
-      .replaceAll('&apos;', "'")
+      .replaceAll("&apos;", "'")
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
-      .replaceAll('&hellip;', '…')
-      .replaceAll('[&hellip;]', '…')
+      .replaceAll('[&hellip;]', '\u2026')
+      .replaceAll('&hellip;', '\u2026')
       .replaceAll(RegExp(r'<[^>]*>'), '');
   }
 }

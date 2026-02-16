@@ -31,7 +31,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         Uri.parse('https://stereo98.com/wp-json/stereo98/v1/palinsesto'),
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         setState(() {
           _palinsesto = data['palinsesto'] ?? [];
           _loading = false;
@@ -48,7 +48,8 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
       final s = start.split(':');
       final e = end.split(':');
       final startMin = int.parse(s[0]) * 60 + int.parse(s[1]);
-      final endMin = int.parse(e[0]) * 60 + int.parse(e[1]);
+      var endMin = int.parse(e[0]) * 60 + int.parse(e[1]);
+      if (endMin == 0) endMin = 1440; // Fix: mezzanotte = 1440
       final nowMin = now.hour * 60 + now.minute;
       return nowMin >= startMin && nowMin < endMin;
     } catch (_) { return false; }

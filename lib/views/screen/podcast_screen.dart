@@ -28,7 +28,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
         Uri.parse('https://stereo98.com/wp-json/stereo98/v1/podcast?per_page=50'),
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         final list = List<Map<String, dynamic>>.from(data['podcast'] ?? []);
         setState(() {
           _podcasts = list;

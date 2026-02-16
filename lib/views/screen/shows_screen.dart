@@ -27,7 +27,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
         Uri.parse('https://stereo98.com/wp-json/stereo98/v1/shows'),
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         setState(() {
           _shows = data['shows'] ?? [];
           _loading = false;

@@ -15,7 +15,7 @@ class ApiServices {
         'https://radio.usacampus.us/listen/radio_apyt/sonando.mp3'));
 
     if (response.statusCode == 200) {
-      var jsonString = jsonDecode(response.body);
+      var jsonString = jsonDecode(utf8.decode(response.bodyBytes));
       debugPrint('--------from radio api data: $jsonString');
       return RadioModel.fromJson(jsonString);
     }
