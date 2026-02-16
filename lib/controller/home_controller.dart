@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:animate_icons/animate_icons.dart';
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:assets_audio_player_updated/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -147,14 +147,14 @@ class HomeController extends GetxController {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        // Fix: decodifica esplicita UTF-8 per caratteri accentati (ì, è, ecc.)
+        // Fix: decodifica esplicita UTF-8 per caratteri accentati
         final data = json.decode(utf8.decode(response.bodyBytes));
         final palinsesto = data['palinsesto'] as List?;
 
         if (palinsesto != null) {
           final now = DateTime.now();
           // Fix: usa indice numerico invece di confronto stringa giorni
-          // DateTime.weekday: 1=Lunedì...7=Domenica → indice array 0-6
+          // DateTime.weekday: 1=Lunedi...7=Domenica -> indice array 0-6
           final dayIndex = now.weekday - 1;
 
           if (dayIndex < palinsesto.length) {
