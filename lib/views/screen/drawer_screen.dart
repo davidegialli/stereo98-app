@@ -108,7 +108,7 @@ class DrawerScreen extends StatelessWidget {
           onPressed: () async {
             final url = Uri.parse('https://stereo98.com');
             if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
+              await launchUrl(url, mode: LaunchMode.platformDefault);
             }
           },
         ),

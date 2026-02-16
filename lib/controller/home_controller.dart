@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:animate_icons/animate_icons.dart';
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:assets_audio_player_updated/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +11,7 @@ class HomeController extends GetxController {
   final assetsAudioPlayer = AssetsAudioPlayer();
 
   Timer? timer;
+  Timer? _palinsestoTimer;
   Timer? _artworkRetryTimer;
 
   var isPressed = false.obs;
@@ -21,13 +22,13 @@ class HomeController extends GetxController {
   var titleValue = ''.obs;
   var artistValue = ''.obs;
   var showName = ''.obs;
-  var showImage = ''.obs;  // 🔥 immagine show corrente
+  var showImage = ''.obs;
   var showDescription = ''.obs;
   var nextShowName = ''.obs;
   var nextShowTime = ''.obs;
   var artworkUrl = 'https://c40.radioboss.fm/w/artwork/83.jpg'.obs;
   var artworkOpacity = 1.0.obs;
-  var artworkShimmer = false.obs;  // 🔥 shimmer durante refresh
+  var artworkShimmer = false.obs;
   var whatsappNumber = ''.obs;
   var whatsappStudio = ''.obs;
 
@@ -36,7 +37,6 @@ class HomeController extends GetxController {
   static const String radiobossArtworkUrl = 'https://c40.radioboss.fm/w/artwork/83.jpg';
   static const String palinsestoUrl = 'https://stereo98.com/wp-json/stereo98/v1/palinsesto';
 
-  // Mappa firma → nome studio (solo per mostrare il nome)
   static const Map<String, String> _studioNomi = {
     '+393532156811': 'Studio Piemonte',
     '+393883758240': 'Studio Lazio',
@@ -63,16 +63,18 @@ class HomeController extends GetxController {
       ),
     );
 
-    // Ascolta stato player → aggiorna bottone automaticamente
     assetsAudioPlayer.isPlaying.listen((playing) {
       isPressed.value = playing;
       update();
     });
 
-    getMetadata();
-    timer = Timer.periodic(const Duration(seconds: 10), (t) => getMetadata());
+    // Timer separati e indipendenti
+    getNowPlaying();
+    getPalinsesto();
 
-    // Refresh copertina ogni 3 minuti con effetto sfumatura
+    timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
+    _palinsestoTimer = Timer.periodic(const Duration(seconds: 60), (t) => getPalinsesto());
+
     _artworkRetryTimer = Timer.periodic(
       const Duration(minutes: 3),
       (t) => _refreshArtworkWithFade(shimmer: true),
@@ -84,13 +86,14 @@ class HomeController extends GetxController {
   @override
   void dispose() {
     timer?.cancel();
+    _palinsestoTimer?.cancel();
     _artworkRetryTimer?.cancel();
     assetsAudioPlayer.dispose();
     super.dispose();
   }
 
-  Future<void> getMetadata() async {
-    // Metadata da RadioBOSS
+  // Metadata da RadioBOSS diretto
+  Future<void> getNowPlaying() async {
     try {
       final response = await http.get(
         Uri.parse(radiobossStatusUrl),
@@ -123,19 +126,21 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
-        if (titleValue.value != newTitle || artistValue.value != newArtist) {
+        if (newTitle.isNotEmpty &&
+            (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
         }
 
-        titleValue.value = newTitle;
-        artistValue.value = newArtist;
+        if (newTitle.isNotEmpty) titleValue.value = newTitle;
+        if (newArtist.isNotEmpty) artistValue.value = newArtist;
         update();
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] RadioBOSS error: $e');
     }
+  }
 
-    // Show corrente + prossimo da palinsesto
+  Future<void> getPalinsesto() async {
     try {
       final response = await http.get(Uri.parse(palinsestoUrl))
           .timeout(const Duration(seconds: 5));
@@ -169,16 +174,13 @@ class HomeController extends GetxController {
                     showImage.value = show['show_immagine']?.toString() ?? '';
                     foundCurrent = true;
 
-                    // 🔥 WhatsApp direttamente dal palinsesto
                     final wa = show['whatsapp']?.toString() ?? '';
                     whatsappNumber.value = wa;
                     whatsappStudio.value = wa.isNotEmpty ? (_studioNomi[wa] ?? '') : '';
 
-                    // Descrizione show
                     final desc = _fixEncoding(show['show_descrizione'] ?? '');
                     showDescription.value = desc;
 
-                    // Prossimo show
                     if (i + 1 < shows.length) {
                       final next = shows[i + 1];
                       nextShowName.value = _fixEncoding(next['show_nome'] ?? '');
@@ -223,10 +225,8 @@ class HomeController extends GetxController {
     }
   }
 
-  // Refresh copertina: shimmer durante refresh periodico, crossfade su cambio canzone
   Future<void> _refreshArtworkWithFade({bool shimmer = false}) async {
     if (shimmer) {
-      // Shimmer per refresh periodico
       artworkShimmer.value = true;
       update();
       await Future.delayed(const Duration(milliseconds: 1200));
@@ -235,7 +235,6 @@ class HomeController extends GetxController {
       artworkShimmer.value = false;
       update();
     } else {
-      // Cross-fade per cambio canzone
       artworkOpacity.value = 0.0;
       update();
       await Future.delayed(const Duration(milliseconds: 400));

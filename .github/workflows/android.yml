@@ -7,34 +7,30 @@ on:
 
 jobs:
   build-apk:
-    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout codice
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Installa Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Installa Flutter 3.22.3
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.3'
+          flutter-version: '3.41.0'
           channel: 'stable'
 
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build APK release
+      - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Carica APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: stereo98-release
+          name: stereo98-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7

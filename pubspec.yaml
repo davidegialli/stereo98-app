@@ -1,5 +1,4 @@
 name: stereo98
-
 description: Stereo 98 DAB+ Radio Streaming
 
 publish_to: 'none'
@@ -7,18 +6,19 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.4.0 <4.4.0"
-  flutter: ">=3.22.0 <4.0.0"
+  sdk: ">=3.5.0 <4.4.0"
+  flutter: ">=3.24.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: 1.0.8
   get: 4.7.3
   get_storage: 2.1.1
   flutter_screenutil: 5.9.3
   google_fonts: 7.1.0
-  assets_audio_player: ^3.0.6
+  assets_audio_player_updated: ^3.1.1
   animate_icons: ^2.0.0
   url_launcher: 6.3.2
   glassmorphism: ^3.0.0
@@ -30,6 +30,7 @@ dependencies:
   permission_handler: ^12.0.1
   connectivity_plus: ^7.0.0
   dropdown_button2: ^2.3.9
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:
