@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               final numero = _controller.whatsappNumber.value;
               final studio = _controller.whatsappStudio.value;
 
-              if (show.isEmpty && nextShow.isEmpty) return const SizedBox.shrink();
+              // Fix: non distruggere widget quando vuoto
 
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 🔥 Foto show
+                            // Ã°Å¸â€Â¥ Foto show
                             if (showImg.isNotEmpty)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     GestureDetector(
                                       onTap: () async {
                                         final url = Uri.parse('https://wa.me/$numero');
-                                        if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                                        if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.platformDefault);
                                       },
                                       child: Container(
                                         width: double.infinity,
@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                           children: [
                                             const Icon(Icons.chat, color: Color(0xFF25D366), size: 16),
                                             const SizedBox(width: 6),
-                                            Text('WhatsApp • $studio',
+                                            Text('WhatsApp Ã¢â‚¬Â¢ $studio',
                                               style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
                                           ],
                                         ),
@@ -267,65 +267,61 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 🔥 COPERTINA con battito cuore + logo sotto durante fade
+              // COPERTINA con shimmer e crossfade
               Obx(() {
                 final isShimmer = _controller.artworkShimmer.value;
-                return AnimatedBuilder(
-                  animation: _shimmerAnim,
-                  builder: (_, __) {
-                    double scale = 1.0;
-                    if (isShimmer) {
-                      final t = ((_shimmerAnim.value + 1) / 2).clamp(0.0, 1.0);
-                      scale = 1.0 + 0.06 * (t < 0.5 ? t * 2 : (1 - t) * 2);
-                    }
-                    return Transform.scale(
-                      scale: scale,
-                      child: Container(
-                        width: 280,
-                        height: 280,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFD85D9D).withOpacity(isShimmer ? 0.7 : 0.4),
-                              blurRadius: isShimmer ? 30 : 20,
-                              spreadRadius: isShimmer ? 5 : 2,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // Logo fisso sotto - si vede durante fade
-                              Container(
-                                color: Colors.black,
-                                padding: const EdgeInsets.all(40),
-                                child: Image.asset(
-                                  'assets/images/logo_header.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              // Copertina sopra con fade
-                              AnimatedOpacity(
-                                opacity: _controller.artworkOpacity.value,
-                                duration: const Duration(milliseconds: 400),
-                                child: Image.network(
-                                  _controller.artworkUrl.value,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(),
-                                ),
-                              ),
-                            ],
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Immagine copertina
+                    Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 20, spreadRadius: 2)],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: AnimatedOpacity(
+                          opacity: _controller.artworkOpacity.value,
+                          duration: const Duration(milliseconds: 400),
+                          child: Image.network(
+                            _controller.artworkUrl.value,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Image.asset('assets/images/logo.png', fit: BoxFit.cover),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    // Shimmer overlay durante refresh
+                    if (isShimmer)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: SizedBox(
+                          width: 300,
+                          height: 300,
+                          child: AnimatedBuilder(
+                            animation: _shimmerAnim,
+                            builder: (_, __) => Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment(_shimmerAnim.value - 1, 0),
+                                  end: Alignment(_shimmerAnim.value, 0),
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.white.withOpacity(0.25),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               }),
-
               addVerticalSpace(15),
 
               // Volume slider
