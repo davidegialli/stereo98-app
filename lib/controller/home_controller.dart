@@ -47,6 +47,20 @@ class HomeController extends GetxController {
     super.onInit();
     controller = AnimateIconController();
 
+    // PRIMA: lancia subito le chiamate API (non bloccanti)
+    getNowPlaying();
+    getPalinsesto();
+
+    // Timer per aggiornamenti periodici
+    timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
+    _palinsestoTimer = Timer.periodic(const Duration(seconds: 30), (t) => getPalinsesto());
+
+    _artworkRetryTimer = Timer.periodic(
+      const Duration(minutes: 3),
+      (t) => _refreshArtworkWithFade(shimmer: true),
+    );
+
+    // DOPO: inizializza il player audio (può essere lento)
     await assetsAudioPlayer.open(
       Audio.liveStream(streamUrl),
       showNotification: true,
@@ -68,18 +82,6 @@ class HomeController extends GetxController {
       update();
     });
 
-    // Timer separati e indipendenti
-    getNowPlaying();
-    getPalinsesto();
-
-    timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
-    _palinsestoTimer = Timer.periodic(const Duration(seconds: 60), (t) => getPalinsesto());
-
-    _artworkRetryTimer = Timer.periodic(
-      const Duration(minutes: 3),
-      (t) => _refreshArtworkWithFade(shimmer: true),
-    );
-
     update();
   }
 
@@ -98,7 +100,7 @@ class HomeController extends GetxController {
       final response = await http.get(
         Uri.parse(radiobossStatusUrl),
         headers: {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         // Fix: decodifica esplicita UTF-8
@@ -138,13 +140,15 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] RadioBOSS error: $e');
+      // Retry dopo 3 secondi se fallisce
+      Future.delayed(const Duration(seconds: 3), () => getNowPlaying());
     }
   }
 
   Future<void> getPalinsesto() async {
     try {
       final response = await http.get(Uri.parse(palinsestoUrl))
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         // Fix: decodifica esplicita UTF-8 per caratteri accentati
@@ -154,7 +158,6 @@ class HomeController extends GetxController {
         if (palinsesto != null) {
           final now = DateTime.now();
           // Fix: usa indice numerico invece di confronto stringa giorni
-          // DateTime.weekday: 1=Lunedi...7=Domenica -> indice array 0-6
           final dayIndex = now.weekday - 1;
 
           if (dayIndex < palinsesto.length) {
@@ -227,6 +230,8 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Palinsesto error: $e');
+      // Retry dopo 3 secondi se fallisce
+      Future.delayed(const Duration(seconds: 3), () => getPalinsesto());
     }
   }
 
