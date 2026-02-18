@@ -233,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                           children: [
                                             const Icon(Icons.chat, color: Color(0xFF25D366), size: 16),
                                             const SizedBox(width: 6),
-                                            Text('WhatsApp Ã¢â‚¬Â¢ $studio',
+                                            Text('WhatsApp - $studio',
                                               style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
                                           ],
                                         ),
