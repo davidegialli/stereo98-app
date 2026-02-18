@@ -45,7 +45,7 @@ class HomeController extends GetxController {
   };
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
     _audioHandler = Get.find<RadioAudioHandler>();
     controller = AnimateIconController();
@@ -63,19 +63,8 @@ class HomeController extends GetxController {
       (t) => _refreshArtworkWithFade(shimmer: true),
     );
 
-    // DOPO: inizializza sorgente audio (può essere lento)
-    try {
-      await player.setUrl(streamUrl);
-    } catch (e) {
-      if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
-    }
-
-    // Aggiorna notifica con info radio di default
-    _audioHandler.updateNowPlaying(
-      title: 'Stereo 98 DAB+',
-      artist: 'In diretta',
-      artworkUri: Uri.parse(radiobossArtworkUrl),
-    );
+    // Inizializza player in background (NON bloccante)
+    _initPlayer();
 
     // Ascolta cambi stato player per aggiornare bottone play/stop
     player.playerStateStream.listen((state) {
@@ -93,6 +82,23 @@ class HomeController extends GetxController {
     );
 
     update();
+  }
+
+  /// Inizializza sorgente audio in background (non blocca onInit)
+  Future<void> _initPlayer() async {
+    try {
+      await player.setUrl(streamUrl);
+      if (kDebugMode) print('[Stereo98] Player source ready');
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
+    }
+
+    // Aggiorna notifica con info radio di default
+    _audioHandler.updateNowPlaying(
+      title: 'Stereo 98 DAB+',
+      artist: 'In diretta',
+      artworkUri: Uri.parse(radiobossArtworkUrl),
+    );
   }
 
   /// Avvia lo streaming (ricarica sorgente se necessario)
