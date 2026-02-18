@@ -1,15 +1,16 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:audio_service/audio_service.dart';
 import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-// AdMob rimosso
 import 'package:stereo98/languages/datastorage_service.dart';
 import 'package:stereo98/languages/language_translation.dart';
 import 'package:stereo98/routes/routes.dart';
+import 'package:stereo98/services/audio_handler.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/network_check/dependency_injection.dart';
 import 'package:stereo98/utils/strings.dart';
@@ -18,14 +19,40 @@ import 'package:stereo98/utils/themes.dart';
     
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // 🔥 Portrait lock globale per tutta l'app
+
+  // Portrait lock globale per tutta l'app
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  // Edge-to-edge per Android 15+ (SDK 35)
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.light,
+    systemNavigationBarDividerColor: Colors.transparent,
+  ));
+
   await GetStorage.init();
   await initialConfig();
   InternetCheckDependencyInjection.init();
+
+  // Inizializza audio_service e registra con GetX
+  final audioHandler = await AudioService.init(
+    builder: () => RadioAudioHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.stereo98.dabplus.audio',
+      androidNotificationChannelName: 'Stereo 98 DAB+',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: false,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+    ),
+  );
+  Get.put<RadioAudioHandler>(audioHandler, permanent: true);
+
   runApp(const MyApp());
 }
  
@@ -52,14 +79,12 @@ class _MyAppState extends State<MyApp> {
       scaffoldBackgroundColor: CustomColor.primaryColor,
       cardColor: CustomColor.primaryColorOne,
       canvasColor: CustomColor.primaryColorTwo,
-      // backgroundColor: CustomColor.primaryColor,
     ),
     AppThemes.dark: ThemeData(
       primaryColor: CustomColor.darkPrimaryColor,
       scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
       cardColor: CustomColor.darkPrimaryColorOne,
       canvasColor: CustomColor.darkPrimaryColorTwo,
-      // backgroundColor: CustomColor.darkPrimaryColor,
     ),
   });
 
@@ -67,7 +92,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     initialConfig();
-    // initPlatformState();
   }
 
   @override
@@ -89,7 +113,6 @@ class _MyAppState extends State<MyApp> {
               locale: storage.languageCode != null
                   ? Locale(storage.languageCode!, storage.countryCode)
                   : const Locale('it', 'IT'),
-              // ignore: prefer_const_constructors
               fallbackLocale: const Locale('it', 'IT'),
               title: Strings.oneRadio,
               debugShowCheckedModeBanner: false,
@@ -101,16 +124,4 @@ class _MyAppState extends State<MyApp> {
           }),
     );
   }
-
-  // Future<void> initPlatformState() async {
-  //   OneSignal.initialize(oneSignalAppId);
-  // }
-
-  // Future<void> _requestPermission() async {
-  //   if (await Permission.f) {
-  //     // Permission granted, start the foreground service
-  //   } else {
-  //     // Permission denied, handle appropriately
-  //   }
-  // }
 }

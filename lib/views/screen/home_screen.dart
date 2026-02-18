@@ -122,11 +122,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: GestureDetector(
                 onTap: () {
                   if (_controller.isPressed.value) {
-                    _controller.assetsAudioPlayer.stop();
+                    _controller.stopStream();
                   } else {
-                    _controller.assetsAudioPlayer.play();
+                    _controller.playStream();
                   }
-                  _controller.isPressed.value = !_controller.isPressed.value;
                 },
                 child: Container(
                   width: 70.w,
@@ -348,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       value: sliderValue.value,
                       onChanged: (value) async {
                         sliderValue.value = value;
-                        await _controller.assetsAudioPlayer.setVolume(value);
+                        await _controller.setVolume(value);
                       },
                     ),
                   )),

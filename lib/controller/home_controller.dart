@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:animate_icons/animate_icons.dart';
-import 'package:assets_audio_player_updated/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:just_audio/just_audio.dart';
+import 'package:stereo98/services/audio_handler.dart';
 
 class HomeController extends GetxController {
-  final assetsAudioPlayer = AssetsAudioPlayer();
+  late final RadioAudioHandler _audioHandler;
+  AudioPlayer get player => _audioHandler.player;
 
   Timer? timer;
   Timer? _palinsestoTimer;
@@ -45,6 +47,7 @@ class HomeController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+    _audioHandler = Get.find<RadioAudioHandler>();
     controller = AnimateIconController();
 
     // PRIMA: lancia subito le chiamate API (non bloccanti)
@@ -60,29 +63,78 @@ class HomeController extends GetxController {
       (t) => _refreshArtworkWithFade(shimmer: true),
     );
 
-    // DOPO: inizializza il player audio (può essere lento)
-    await assetsAudioPlayer.open(
-      Audio.liveStream(streamUrl),
-      showNotification: true,
-      autoStart: false,
-      notificationSettings: NotificationSettings(
-        stopEnabled: false,
-        nextEnabled: false,
-        prevEnabled: false,
-        customPlayPauseAction: (playing) {
-          isPressed.value = playing.isPlaying.value;
-          assetsAudioPlayer.playOrPause();
-          update();
-        },
-      ),
+    // DOPO: inizializza sorgente audio (può essere lento)
+    try {
+      await player.setUrl(streamUrl);
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
+    }
+
+    // Aggiorna notifica con info radio di default
+    _audioHandler.updateMediaItem(
+      title: 'Stereo 98 DAB+',
+      artist: 'In diretta',
+      artworkUri: Uri.parse(radiobossArtworkUrl),
     );
 
-    assetsAudioPlayer.isPlaying.listen((playing) {
-      isPressed.value = playing;
+    // Ascolta cambi stato player per aggiornare bottone play/stop
+    player.playerStateStream.listen((state) {
+      isPressed.value = state.playing;
       update();
     });
 
+    // Riconnessione automatica su errori di rete/stream
+    player.playbackEventStream.listen(
+      (_) {},
+      onError: (Object error, StackTrace stackTrace) {
+        if (kDebugMode) print('[Stereo98] Player error: $error');
+        _reconnectStream();
+      },
+    );
+
     update();
+  }
+
+  /// Avvia lo streaming (ricarica sorgente se necessario)
+  Future<void> playStream() async {
+    try {
+      if (player.processingState == ProcessingState.idle ||
+          player.processingState == ProcessingState.completed) {
+        await player.setUrl(streamUrl);
+      }
+      await _audioHandler.play();
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Play error: $e');
+      _reconnectStream();
+    }
+  }
+
+  /// Ferma lo streaming
+  Future<void> stopStream() async {
+    try {
+      await player.stop();
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Stop error: $e');
+    }
+  }
+
+  /// Imposta il volume (0.0 - 1.0)
+  Future<void> setVolume(double value) async {
+    await player.setVolume(value);
+  }
+
+  /// Riconnessione automatica dopo errore di rete
+  Future<void> _reconnectStream() async {
+    await Future.delayed(const Duration(seconds: 3));
+    try {
+      await player.setUrl(streamUrl);
+      if (isPressed.value) {
+        await _audioHandler.play();
+      }
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Reconnect error: $e');
+      Future.delayed(const Duration(seconds: 5), () => _reconnectStream());
+    }
   }
 
   @override
@@ -90,11 +142,14 @@ class HomeController extends GetxController {
     timer?.cancel();
     _palinsestoTimer?.cancel();
     _artworkRetryTimer?.cancel();
-    assetsAudioPlayer.dispose();
+    _audioHandler.dispose();
     super.dispose();
   }
 
-  // Metadata da RadioBOSS diretto
+  // ==========================================================================
+  // API LOGIC — INVARIATA RISPETTO ALLA VERSIONE PRECEDENTE
+  // ==========================================================================
+
   Future<void> getNowPlaying() async {
     try {
       final response = await http.get(
@@ -132,6 +187,13 @@ class HomeController extends GetxController {
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
+
+          // Aggiorna metadati notifica con canzone corrente
+          _audioHandler.updateMediaItem(
+            title: newTitle,
+            artist: newArtist,
+            artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
+          );
         }
 
         if (newTitle.isNotEmpty) titleValue.value = newTitle;
@@ -140,7 +202,6 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] RadioBOSS error: $e');
-      // Retry dopo 3 secondi se fallisce
       Future.delayed(const Duration(seconds: 3), () => getNowPlaying());
     }
   }
@@ -230,7 +291,6 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Palinsesto error: $e');
-      // Retry dopo 3 secondi se fallisce
       Future.delayed(const Duration(seconds: 3), () => getPalinsesto());
     }
   }

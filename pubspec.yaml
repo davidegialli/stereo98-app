@@ -3,7 +3,7 @@ description: Stereo 98 DAB+ Radio Streaming
 
 publish_to: 'none'
 
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ">=3.5.0 <4.4.0"
@@ -18,7 +18,9 @@ dependencies:
   get_storage: 2.1.1
   flutter_screenutil: 5.9.3
   google_fonts: 7.1.0
-  assets_audio_player_updated: ^3.1.1
+  just_audio: ^0.9.42
+  audio_service: ^0.18.15
+  audio_session: ^0.1.21
   animate_icons: ^2.0.0
   url_launcher: 6.3.2
   glassmorphism: ^3.0.0
