@@ -24,13 +24,12 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   PlaybackState _transformEvent(PlaybackEvent event) {
     return PlaybackState(
       controls: [
+        // Solo play/pause — niente skip/stop per radio live
         if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
       ],
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
-        MediaAction.stop,
       },
       androidCompactActionIndices: const [0],
       processingState: const {
