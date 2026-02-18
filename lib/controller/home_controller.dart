@@ -71,7 +71,7 @@ class HomeController extends GetxController {
     }
 
     // Aggiorna notifica con info radio di default
-    _audioHandler.updateMediaItem(
+    _audioHandler.updateNowPlaying(
       title: 'Stereo 98 DAB+',
       artist: 'In diretta',
       artworkUri: Uri.parse(radiobossArtworkUrl),
@@ -189,7 +189,7 @@ class HomeController extends GetxController {
           _refreshArtworkWithFade();
 
           // Aggiorna metadati notifica con canzone corrente
-          _audioHandler.updateMediaItem(
+          _audioHandler.updateNowPlaying(
             title: newTitle,
             artist: newArtist,
             artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),

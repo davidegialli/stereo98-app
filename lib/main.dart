@@ -47,7 +47,7 @@ Future<void> main() async {
       androidNotificationChannelId: 'com.stereo98.dabplus.audio',
       androidNotificationChannelName: 'Stereo 98 DAB+',
       androidNotificationOngoing: true,
-      androidStopForegroundOnPause: false,
+      androidStopForegroundOnPause: true,
       androidNotificationIcon: 'mipmap/ic_launcher',
     ),
   );

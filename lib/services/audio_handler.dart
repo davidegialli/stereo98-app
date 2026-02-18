@@ -18,7 +18,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   AudioPlayer get player => _player;
 
   RadioAudioHandler() {
-    // Propaga stato del player ad audio_service (notifiche, lock screen, ecc.)
     _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
   }
 
@@ -48,7 +47,7 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Aggiorna i metadati visualizzati nella notifica
-  void updateMediaItem({
+  void updateNowPlaying({
     required String title,
     required String artist,
     Uri? artworkUri,
@@ -59,7 +58,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
       title: title,
       artist: artist,
       artUri: artworkUri,
-      isLiveStream: true,
     ));
   }
 
