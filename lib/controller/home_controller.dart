@@ -34,6 +34,9 @@ class HomeController extends GetxController {
   var whatsappNumber = ''.obs;
   var whatsappStudio = ''.obs;
 
+  // Flag per evitare che il listener resetti isPressed durante l'avvio
+  bool _isStartingPlay = false;
+
   static const String streamUrl = 'https://c40.radioboss.fm:8083/stream';
   static const String radiobossStatusUrl = 'https://c40.radioboss.fm:8083/status-json.xsl';
   static const String radiobossArtworkUrl = 'https://c40.radioboss.fm/w/artwork/83.jpg';
@@ -68,8 +71,11 @@ class HomeController extends GetxController {
 
     // Ascolta cambi stato player per aggiornare bottone play/stop
     player.playerStateStream.listen((state) {
-      isPressed.value = state.playing;
-      update();
+      // Non resettare se stiamo avviando il play (aspetta che parta davvero)
+      if (!_isStartingPlay) {
+        isPressed.value = state.playing;
+        update();
+      }
     });
 
     // Riconnessione automatica su errori di rete/stream
@@ -77,6 +83,7 @@ class HomeController extends GetxController {
       (_) {},
       onError: (Object error, StackTrace stackTrace) {
         if (kDebugMode) print('[Stereo98] Player error: $error');
+        _isStartingPlay = false;
         _reconnectStream();
       },
     );
@@ -100,15 +107,16 @@ class HomeController extends GetxController {
     );
   }
 
-  /// Avvia lo streaming (ricarica sorgente se necessario)
+  /// Avvia lo streaming
   Future<void> playStream() async {
     // Toggle IMMEDIATO per reattività UI
+    _isStartingPlay = true;
     isPressed.value = true;
     update();
 
     try {
-      if (player.processingState == ProcessingState.idle ||
-          player.processingState == ProcessingState.completed) {
+      // Se il player è in idle (prima volta o dopo errore), ricarica URL
+      if (player.processingState == ProcessingState.idle) {
         await player.setUrl(streamUrl);
       }
       await _audioHandler.play();
@@ -117,17 +125,19 @@ class HomeController extends GetxController {
       isPressed.value = false;
       update();
       _reconnectStream();
+    } finally {
+      _isStartingPlay = false;
     }
   }
 
-  /// Ferma lo streaming
+  /// Ferma lo streaming (usa pause così il prossimo play è istantaneo)
   Future<void> stopStream() async {
     // Toggle IMMEDIATO per reattività UI
     isPressed.value = false;
     update();
 
     try {
-      await player.stop();
+      await _audioHandler.pause();
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Stop error: $e');
     }
@@ -208,7 +218,7 @@ class HomeController extends GetxController {
         if (newTitle.isNotEmpty) titleValue.value = newTitle;
         if (newArtist.isNotEmpty) artistValue.value = newArtist;
 
-        // SEMPRE aggiorna metadati notifica (non solo al cambio canzone)
+        // SEMPRE aggiorna metadati notifica
         _audioHandler.updateNowPlaying(
           title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
           artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',

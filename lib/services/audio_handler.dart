@@ -24,9 +24,10 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   PlaybackState _transformEvent(PlaybackEvent event) {
     return PlaybackState(
       controls: [
-        // Solo play/pause — niente skip/stop per radio live
+        // Solo play/pause — niente altro per radio live
         if (_player.playing) MediaControl.pause else MediaControl.play,
       ],
+      // Solo play e pause, niente stop/skip
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
@@ -72,8 +73,13 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> stop() async {
+    await _player.pause();
+    // Usiamo pause invece di stop per non mandare il player in idle
+    // Così al prossimo play non serve rifare setUrl
+  }
+
+  Future<void> fullStop() async {
     await _player.stop();
-    return super.stop();
   }
 
   Future<void> dispose() async {
