@@ -92,17 +92,20 @@ class HomeController extends GetxController {
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
     }
-
-    // Aggiorna notifica con info radio di default
+    // Metadati default iniziali — getNowPlaying() li sovrascriverà con i dati reali
     _audioHandler.updateNowPlaying(
-      title: 'Stereo 98 DAB+',
-      artist: 'In diretta',
+      title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
+      artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
       artworkUri: Uri.parse(radiobossArtworkUrl),
     );
   }
 
   /// Avvia lo streaming (ricarica sorgente se necessario)
   Future<void> playStream() async {
+    // Toggle IMMEDIATO per reattività UI
+    isPressed.value = true;
+    update();
+
     try {
       if (player.processingState == ProcessingState.idle ||
           player.processingState == ProcessingState.completed) {
@@ -111,12 +114,18 @@ class HomeController extends GetxController {
       await _audioHandler.play();
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Play error: $e');
+      isPressed.value = false;
+      update();
       _reconnectStream();
     }
   }
 
   /// Ferma lo streaming
   Future<void> stopStream() async {
+    // Toggle IMMEDIATO per reattività UI
+    isPressed.value = false;
+    update();
+
     try {
       await player.stop();
     } catch (e) {
@@ -190,20 +199,22 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
+        // Artwork fade solo quando cambia canzone
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
-
-          // Aggiorna metadati notifica con canzone corrente
-          _audioHandler.updateNowPlaying(
-            title: newTitle,
-            artist: newArtist,
-            artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
-          );
         }
 
         if (newTitle.isNotEmpty) titleValue.value = newTitle;
         if (newArtist.isNotEmpty) artistValue.value = newArtist;
+
+        // SEMPRE aggiorna metadati notifica (non solo al cambio canzone)
+        _audioHandler.updateNowPlaying(
+          title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
+          artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
+          artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
+        );
+
         update();
       }
     } catch (e) {
