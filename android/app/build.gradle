@@ -39,7 +39,7 @@ android {
         applicationId "com.stereo98.dabplus"
         multiDexEnabled true
         minSdkVersion 25
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
