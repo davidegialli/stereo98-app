@@ -49,7 +49,7 @@ Future<void> main() async {
         androidNotificationChannelName: 'Stereo 98 DAB+',
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: true,
-        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidNotificationIcon: 'drawable/ic_notification',
       ),
     );
     Get.put<RadioAudioHandler>(audioHandler, permanent: true);
