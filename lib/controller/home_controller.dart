@@ -15,6 +15,7 @@ class HomeController extends GetxController {
   Timer? timer;
   Timer? _palinsestoTimer;
   Timer? _artworkRetryTimer;
+  Timer? _rdsTimer;
 
   var isPressed = false.obs;
   var isLoading = false.obs;
@@ -34,13 +35,20 @@ class HomeController extends GetxController {
   var whatsappNumber = ''.obs;
   var whatsappStudio = ''.obs;
 
-  // Flag per evitare che il listener resetti isPressed durante l'avvio
+  // RDS
+  var rdsAttivo = false.obs;
+  var rdsTesto = ''.obs;
+  var rdsTipo = 'scroll'.obs;
+  var rdsUrl = ''.obs;
+  var rdsPopupDismissed = false.obs;
+
   bool _isStartingPlay = false;
 
   static const String streamUrl = 'https://c40.radioboss.fm:8083/stream';
   static const String radiobossStatusUrl = 'https://c40.radioboss.fm:8083/status-json.xsl';
   static const String radiobossArtworkUrl = 'https://c40.radioboss.fm/w/artwork/83.jpg';
   static const String palinsestoUrl = 'https://stereo98.com/wp-json/stereo98/v1/palinsesto';
+  static const String rdsApiUrl = 'https://stereo98.com/wp-json/stereo98/v1/rds';
 
   static const Map<String, String> _studioNomi = {
     '+393532156811': 'Studio Piemonte',
@@ -53,23 +61,25 @@ class HomeController extends GetxController {
     _audioHandler = Get.find<RadioAudioHandler>();
     controller = AnimateIconController();
 
-    // PRIMA: lancia subito le chiamate API (non bloccanti)
     getNowPlaying();
     getPalinsesto();
+    getRds();
 
-    // Timer per aggiornamenti periodici
     timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
     _palinsestoTimer = Timer.periodic(const Duration(seconds: 30), (t) => getPalinsesto());
+    _rdsTimer = Timer.periodic(const Duration(seconds: 60), (t) => getRds());
 
     _artworkRetryTimer = Timer.periodic(
       const Duration(minutes: 3),
-      (t) => _refreshArtworkWithFade(shimmer: true),
+      (t) {
+        _refreshArtworkWithFade(shimmer: true);
+        // Aggiorna anche notifica ogni 3 minuti
+        _updateNotification();
+      },
     );
 
-    // Inizializza player in background (NON bloccante)
     _initPlayer();
 
-    // Ascolta cambi stato player per aggiornare bottone play/stop
     player.playerStateStream.listen((state) {
       if (!_isStartingPlay) {
         isPressed.value = state.playing;
@@ -77,7 +87,6 @@ class HomeController extends GetxController {
       }
     });
 
-    // Riconnessione automatica su errori di rete/stream
     player.playbackEventStream.listen(
       (_) {},
       onError: (Object error, StackTrace stackTrace) {
@@ -90,7 +99,6 @@ class HomeController extends GetxController {
     update();
   }
 
-  /// Inizializza sorgente audio in background (non blocca onInit)
   Future<void> _initPlayer() async {
     try {
       await player.setUrl(streamUrl);
@@ -98,22 +106,28 @@ class HomeController extends GetxController {
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
     }
-    // Metadati default iniziali — getNowPlaying() li sovrascriverà con i dati reali
     _audioHandler.updateNowPlaying(
-      title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
-      artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
+      title: 'Stereo 98 DAB+',
+      artist: 'In diretta',
       artworkUri: Uri.parse(radiobossArtworkUrl),
     );
   }
 
-  /// Avvia lo streaming (SEMPRE riconnette al live)
+  /// Aggiorna notifica con metadati correnti
+  void _updateNotification() {
+    _audioHandler.updateNowPlaying(
+      title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
+      artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
+      artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
+    );
+  }
+
   Future<void> playStream() async {
     _isStartingPlay = true;
     isPressed.value = true;
     update();
 
     try {
-      // Sempre ricarica lo stream per avere audio live allineato
       await player.setUrl(streamUrl);
       await _audioHandler.play();
     } catch (e) {
@@ -126,7 +140,6 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Ferma lo streaming (usa pause così il prossimo play è istantaneo)
   Future<void> stopStream() async {
     isPressed.value = false;
     update();
@@ -138,12 +151,10 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Imposta il volume (0.0 - 1.0)
   Future<void> setVolume(double value) async {
     await player.setVolume(value);
   }
 
-  /// Riconnessione automatica dopo errore di rete
   Future<void> _reconnectStream() async {
     await Future.delayed(const Duration(seconds: 3));
     try {
@@ -162,12 +173,13 @@ class HomeController extends GetxController {
     timer?.cancel();
     _palinsestoTimer?.cancel();
     _artworkRetryTimer?.cancel();
+    _rdsTimer?.cancel();
     _audioHandler.dispose();
     super.dispose();
   }
 
   // ==========================================================================
-  // API LOGIC — INVARIATA RISPETTO ALLA VERSIONE PRECEDENTE
+  // API
   // ==========================================================================
 
   Future<void> getNowPlaying() async {
@@ -203,20 +215,17 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
+        // Solo a cambio canzone: aggiorna artwork + notifica
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
+
+          titleValue.value = newTitle;
+          artistValue.value = newArtist;
+
+          // Aggiorna notifica SOLO al cambio canzone
+          _updateNotification();
         }
-
-        if (newTitle.isNotEmpty) titleValue.value = newTitle;
-        if (newArtist.isNotEmpty) artistValue.value = newArtist;
-
-        // SEMPRE aggiorna metadati notifica
-        _audioHandler.updateNowPlaying(
-          title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
-          artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
-          artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
-        );
 
         update();
       }
@@ -310,6 +319,38 @@ class HomeController extends GetxController {
       if (kDebugMode) print('[Stereo98] Palinsesto error: $e');
       Future.delayed(const Duration(seconds: 3), () => getPalinsesto());
     }
+  }
+
+  Future<void> getRds() async {
+    try {
+      final response = await http.get(Uri.parse(rdsApiUrl))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final nuovoTesto = data['testo']?.toString() ?? '';
+        final nuovoAttivo = data['attivo'] == true;
+        final nuovoTipo = data['tipo']?.toString() ?? 'scroll';
+        final nuovoUrl = data['url']?.toString() ?? '';
+
+        if (nuovoTesto != rdsTesto.value) {
+          rdsPopupDismissed.value = false;
+        }
+
+        rdsAttivo.value = nuovoAttivo && nuovoTesto.isNotEmpty;
+        rdsTesto.value = nuovoTesto;
+        rdsTipo.value = nuovoTipo;
+        rdsUrl.value = nuovoUrl;
+        update();
+      }
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] RDS error: $e');
+    }
+  }
+
+  void dismissRdsPopup() {
+    rdsPopupDismissed.value = true;
+    update();
   }
 
   Future<void> _refreshArtworkWithFade({bool shimmer = false}) async {

@@ -43,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Logo fisso sotto - si vede durante fade
             Container(
               color: Colors.black,
               padding: const EdgeInsets.all(40),
@@ -52,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 fit: BoxFit.contain,
               ),
             ),
-            // Copertina sopra con fade
             AnimatedOpacity(
               opacity: _controller.artworkOpacity.value,
               duration: const Duration(milliseconds: 400),
@@ -67,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-
 
   @override
   void initState() {
@@ -101,6 +98,108 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       body: _bodyWidget(context),
     );
   }
+
+  // ============================================================================
+  // RDS WIDGETS
+  // ============================================================================
+
+  Widget _buildRdsMarquee() {
+    return GestureDetector(
+      onTap: () => _openRdsLink(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFD85D9D).withOpacity(0.3),
+              const Color(0xFF4EC8E8).withOpacity(0.15),
+              const Color(0xFFD85D9D).withOpacity(0.3),
+            ],
+          ),
+        ),
+        child: _MarqueeText(
+          text: _controller.rdsTesto.value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRdsPopup() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFD85D9D).withOpacity(0.25),
+              const Color(0xFF4EC8E8).withOpacity(0.15),
+            ],
+          ),
+          border: Border.all(
+            color: const Color(0xFFD85D9D).withOpacity(0.6),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.campaign, color: Color(0xFFD85D9D), size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _openRdsLink(),
+                child: Text(
+                  _controller.rdsTesto.value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _controller.dismissRdsPopup(),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+                child: const Icon(Icons.close, color: Colors.white54, size: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openRdsLink() async {
+    final link = _controller.rdsUrl.value;
+    if (link.isNotEmpty) {
+      final url = Uri.parse(link);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    }
+  }
+
+  // ============================================================================
+  // BODY
+  // ============================================================================
 
   Widget _bodyWidget(BuildContext context) {
     return Container(
@@ -143,7 +242,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             )),
 
-            addVerticalSpace(Dimensions.marginSize * 2),
+            addVerticalSpace(Dimensions.marginSize),
+
+            // RDS MESSAGE
+            Obx(() {
+              if (!_controller.rdsAttivo.value) return const SizedBox.shrink();
+
+              if (_controller.rdsTipo.value == 'popup') {
+                if (_controller.rdsPopupDismissed.value) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildRdsPopup(),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildRdsMarquee(),
+              );
+            }),
 
             // SHOW IN ONDA o PROSSIMA DIRETTA
             Obx(() {
@@ -153,8 +270,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               final nextTime = _controller.nextShowTime.value;
               final numero = _controller.whatsappNumber.value;
               final studio = _controller.whatsappStudio.value;
-
-              // Fix: non distruggere widget quando vuoto
 
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -175,7 +290,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Ã°Å¸â€Â¥ Foto show
                             if (showImg.isNotEmpty)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
@@ -311,10 +425,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // COPERTINA con battito cuore + logo sotto durante fade
               Obx(() {
                 final isShimmer = _controller.artworkShimmer.value;
-                // Battito solo durante shimmer (efficiente: AnimatedBuilder solo quando serve)
                 if (isShimmer) {
                   return AnimatedBuilder(
                     animation: _shimmerAnim,
@@ -332,7 +444,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               }),
               addVerticalSpace(15),
 
-              // Volume slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -355,7 +466,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
 
-              // Titolo
               Obx(() => Padding(
                 padding: EdgeInsets.symmetric(horizontal: Dimensions.defaultPaddingSize * 0.4),
                 child: Text(
@@ -368,7 +478,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               )),
               addVerticalSpace(5),
 
-              // Artista
               Obx(() => Padding(
                 padding: EdgeInsets.symmetric(horizontal: Dimensions.defaultPaddingSize * 0.4),
                 child: Text(
@@ -382,6 +491,97 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// MARQUEE WIDGET
+// =============================================================================
+class _MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+
+  const _MarqueeText({required this.text, required this.style});
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText> with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startScroll());
+  }
+
+  void _startScroll() {
+    if (!mounted || !_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) return;
+
+    _animController.duration = Duration(milliseconds: (maxScroll * 30).toInt().clamp(4000, 20000));
+    _animController.addListener(() {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(
+          _animController.value * _scrollController.position.maxScrollExtent,
+        );
+      }
+    });
+    _animController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _scrollController.jumpTo(0);
+            _animController.forward(from: 0);
+          }
+        });
+      }
+    });
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) _animController.forward(from: 0);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _MarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _animController.reset();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startScroll());
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 20,
+      child: ListView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(widget.text, style: widget.style),
+          ),
+        ],
       ),
     );
   }

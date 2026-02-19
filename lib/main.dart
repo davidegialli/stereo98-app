@@ -20,13 +20,11 @@ import 'package:stereo98/utils/themes.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Portrait lock globale per tutta l'app
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Edge-to-edge per Android 15+ (SDK 35)
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
@@ -40,7 +38,6 @@ Future<void> main() async {
   await initialConfig();
   InternetCheckDependencyInjection.init();
 
-  // Inizializza audio_service
   try {
     final audioHandler = await AudioService.init(
       builder: () => RadioAudioHandler(),

@@ -1,8 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
-/// AudioHandler per Stereo 98 DAB+
-/// Gestisce background audio e notifiche media con just_audio + audio_service.
 class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer(
     audioLoadConfiguration: AudioLoadConfiguration(
@@ -24,7 +22,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   PlaybackState _transformEvent(PlaybackEvent event) {
     return PlaybackState(
       controls: [
-        // Solo play/pause — niente altro per radio live
         if (_player.playing) MediaControl.pause else MediaControl.play,
       ],
       systemActions: const {
@@ -45,7 +42,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  /// Aggiorna i metadati visualizzati nella notifica
   void updateNowPlaying({
     required String title,
     required String artist,
