@@ -106,25 +106,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildRdsMarquee() {
     return GestureDetector(
       onTap: () => _openRdsLink(),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFFD85D9D).withOpacity(0.3),
-              const Color(0xFF4EC8E8).withOpacity(0.15),
-              const Color(0xFFD85D9D).withOpacity(0.3),
-            ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFFD85D9D).withOpacity(0.25),
+                const Color(0xFF4EC8E8).withOpacity(0.12),
+              ],
+            ),
+            border: Border.all(
+              color: const Color(0xFFD85D9D).withOpacity(0.6),
+              width: 1,
+            ),
           ),
-        ),
-        child: _MarqueeText(
-          text: _controller.rdsTesto.value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
+          child: Row(
+            children: [
+              const Icon(Icons.campaign, color: Color(0xFFD85D9D), size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MarqueeText(
+                  text: _controller.rdsTesto.value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
