@@ -246,32 +246,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
             // RDS MESSAGE
             Obx(() {
-              // DEBUG TEMPORANEO
-              final debugText = 'RDS: attivo=${_controller.rdsAttivo.value} tipo=${_controller.rdsTipo.value} testo=${_controller.rdsTesto.value.length} chars';
-              
-              return Column(
-                children: [
-                  // Debug - RIMUOVERE DOPO
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(debugText, style: const TextStyle(color: Colors.yellow, fontSize: 10)),
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  if (!_controller.rdsAttivo.value) const SizedBox.shrink()
-                  else if (_controller.rdsTipo.value == 'popup') ...[
-                    if (!_controller.rdsPopupDismissed.value)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildRdsPopup(),
-                      ),
-                  ] else ...[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildRdsMarquee(),
-                    ),
-                  ],
-                ],
+              if (!_controller.rdsAttivo.value) return const SizedBox.shrink();
+
+              if (_controller.rdsTipo.value == 'popup') {
+                if (_controller.rdsPopupDismissed.value) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildRdsPopup(),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildRdsMarquee(),
               );
             }),
 

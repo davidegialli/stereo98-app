@@ -322,12 +322,9 @@ class HomeController extends GetxController {
   }
 
   Future<void> getRds() async {
-    if (kDebugMode) print('[Stereo98] getRds() called...');
     try {
       final response = await http.get(Uri.parse(rdsApiUrl))
           .timeout(const Duration(seconds: 10));
-
-      if (kDebugMode) print('[Stereo98] RDS response: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
@@ -344,8 +341,6 @@ class HomeController extends GetxController {
         rdsTesto.value = nuovoTesto;
         rdsTipo.value = nuovoTipo;
         rdsUrl.value = nuovoUrl;
-        
-        if (kDebugMode) print('[Stereo98] RDS set: attivo=${rdsAttivo.value} tipo=${rdsTipo.value} testo=$nuovoTesto');
         update();
       }
     } catch (e) {
