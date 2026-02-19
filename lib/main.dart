@@ -40,21 +40,20 @@ Future<void> main() async {
   await initialConfig();
   InternetCheckDependencyInjection.init();
 
-  // Inizializza audio_service - wrappato in try-catch per non bloccare l'app
+  // Inizializza audio_service
   try {
     final audioHandler = await AudioService.init(
       builder: () => RadioAudioHandler(),
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.stereo98.dabplus.audio',
         androidNotificationChannelName: 'Stereo 98 DAB+',
-        androidNotificationOngoing: true,
+        androidNotificationOngoing: false,
         androidStopForegroundOnPause: true,
-        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidNotificationIcon: 'drawable/ic_notification',
       ),
     );
     Get.put<RadioAudioHandler>(audioHandler, permanent: true);
   } catch (e) {
-    // Fallback: registra handler senza AudioService
     debugPrint('[Stereo98] AudioService.init failed: $e');
     Get.put<RadioAudioHandler>(RadioAudioHandler(), permanent: true);
   }

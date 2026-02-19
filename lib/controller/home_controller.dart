@@ -71,7 +71,6 @@ class HomeController extends GetxController {
 
     // Ascolta cambi stato player per aggiornare bottone play/stop
     player.playerStateStream.listen((state) {
-      // Non resettare se stiamo avviando il play (aspetta che parta davvero)
       if (!_isStartingPlay) {
         isPressed.value = state.playing;
         update();
@@ -107,18 +106,15 @@ class HomeController extends GetxController {
     );
   }
 
-  /// Avvia lo streaming
+  /// Avvia lo streaming (SEMPRE riconnette al live)
   Future<void> playStream() async {
-    // Toggle IMMEDIATO per reattività UI
     _isStartingPlay = true;
     isPressed.value = true;
     update();
 
     try {
-      // Se il player è in idle (prima volta o dopo errore), ricarica URL
-      if (player.processingState == ProcessingState.idle) {
-        await player.setUrl(streamUrl);
-      }
+      // Sempre ricarica lo stream per avere audio live allineato
+      await player.setUrl(streamUrl);
       await _audioHandler.play();
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Play error: $e');
@@ -132,7 +128,6 @@ class HomeController extends GetxController {
 
   /// Ferma lo streaming (usa pause così il prossimo play è istantaneo)
   Future<void> stopStream() async {
-    // Toggle IMMEDIATO per reattività UI
     isPressed.value = false;
     update();
 
@@ -183,7 +178,6 @@ class HomeController extends GetxController {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        // Fix: decodifica esplicita UTF-8
         final data = json.decode(utf8.decode(response.bodyBytes));
         String title = 'Stereo 98 DAB+';
         String artist = 'In diretta';
@@ -209,7 +203,6 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
-        // Artwork fade solo quando cambia canzone
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
@@ -239,13 +232,11 @@ class HomeController extends GetxController {
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        // Fix: decodifica esplicita UTF-8 per caratteri accentati
         final data = json.decode(utf8.decode(response.bodyBytes));
         final palinsesto = data['palinsesto'] as List?;
 
         if (palinsesto != null) {
           final now = DateTime.now();
-          // Fix: usa indice numerico invece di confronto stringa giorni
           final dayIndex = now.weekday - 1;
 
           if (dayIndex < palinsesto.length) {
@@ -260,7 +251,6 @@ class HomeController extends GetxController {
 
               if (start != null && end != null && start.length >= 2 && end.length >= 2) {
                 final startMin = int.parse(start[0]) * 60 + int.parse(start[1]);
-                // Fix: gestione show che finiscono a mezzanotte (00:00 = 1440)
                 var endMin = int.parse(end[0]) * 60 + int.parse(end[1]);
                 if (endMin == 0) endMin = 1440;
                 final nowMin = now.hour * 60 + now.minute;

@@ -7,10 +7,10 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer(
     audioLoadConfiguration: AudioLoadConfiguration(
       androidLoadControl: AndroidLoadControl(
-        minBufferDuration: const Duration(seconds: 15),
-        maxBufferDuration: const Duration(seconds: 50),
-        bufferForPlaybackDuration: const Duration(seconds: 5),
-        bufferForPlaybackAfterRebufferDuration: const Duration(seconds: 10),
+        minBufferDuration: const Duration(seconds: 5),
+        maxBufferDuration: const Duration(seconds: 10),
+        bufferForPlaybackDuration: const Duration(seconds: 3),
+        bufferForPlaybackAfterRebufferDuration: const Duration(seconds: 5),
       ),
     ),
   );
@@ -27,7 +27,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
         // Solo play/pause — niente altro per radio live
         if (_player.playing) MediaControl.pause else MediaControl.play,
       ],
-      // Solo play e pause, niente stop/skip
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
@@ -74,8 +73,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     await _player.pause();
-    // Usiamo pause invece di stop per non mandare il player in idle
-    // Così al prossimo play non serve rifare setUrl
   }
 
   Future<void> fullStop() async {
