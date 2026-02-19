@@ -67,7 +67,7 @@ class HomeController extends GetxController {
 
     timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
     _palinsestoTimer = Timer.periodic(const Duration(seconds: 30), (t) => getPalinsesto());
-    _rdsTimer = Timer.periodic(const Duration(seconds: 60), (t) => getRds());
+    _rdsTimer = Timer.periodic(const Duration(seconds: 30), (t) => getRds());
 
     _artworkRetryTimer = Timer.periodic(
       const Duration(minutes: 3),
@@ -323,8 +323,10 @@ class HomeController extends GetxController {
 
   Future<void> getRds() async {
     try {
-      final response = await http.get(Uri.parse(rdsApiUrl))
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(
+        Uri.parse('$rdsApiUrl?_t=${DateTime.now().millisecondsSinceEpoch}'),
+        headers: {'Cache-Control': 'no-cache'},
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
