@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 
 class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
@@ -14,9 +15,48 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   );
 
   AudioPlayer get player => _player;
+  bool _wasPlayingBeforeInterruption = false;
 
   RadioAudioHandler() {
     _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
+    _initAudioSession();
+  }
+
+  Future<void> _initAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    ));
+
+    // Gestione interruzioni (telefonata, navigatore, ecc.)
+    session.interruptionEventStream.listen((event) {
+      if (event.begin) {
+        // Interruzione iniziata (es. telefonata in arrivo)
+        _wasPlayingBeforeInterruption = _player.playing;
+        if (_player.playing) {
+          _player.pause();
+        }
+      } else {
+        // Interruzione finita (es. telefonata terminata)
+        if (_wasPlayingBeforeInterruption) {
+          _player.play();
+          _wasPlayingBeforeInterruption = false;
+        }
+      }
+    });
+
+    // Cuffie scollegate → pausa
+    session.becomingNoisyEventStream.listen((_) {
+      if (_player.playing) {
+        _player.pause();
+      }
+    });
   }
 
   PlaybackState _transformEvent(PlaybackEvent event) {
