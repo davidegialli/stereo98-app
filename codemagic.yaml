@@ -10,7 +10,7 @@ workflows:
       - name: Get Flutter packages
         script: flutter packages pub get
       - name: Build AAB
-        script: flutter build appbundle --release
+        script: flutter build appbundle --release --build-number=3
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/*.apk
