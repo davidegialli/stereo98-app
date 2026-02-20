@@ -35,12 +35,10 @@ class HomeController extends GetxController {
   var whatsappNumber = ''.obs;
   var whatsappStudio = ''.obs;
 
-  // RDS
+  // RDS - messaggi multipli
   var rdsAttivo = false.obs;
-  var rdsTesto = ''.obs;
-  var rdsTipo = 'scroll'.obs;
-  var rdsUrl = ''.obs;
-  var rdsPopupDismissed = false.obs;
+  var rdsMessaggi = <Map<String, String>>[].obs;
+  var rdsDismissed = <int>{}.obs;
 
   bool _isStartingPlay = false;
 
@@ -73,7 +71,6 @@ class HomeController extends GetxController {
       const Duration(minutes: 3),
       (t) {
         _refreshArtworkWithFade(shimmer: true);
-        // Aggiorna anche notifica ogni 3 minuti
         _updateNotification();
       },
     );
@@ -113,7 +110,6 @@ class HomeController extends GetxController {
     );
   }
 
-  /// Aggiorna notifica con metadati correnti
   void _updateNotification() {
     _audioHandler.updateNowPlaying(
       title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
@@ -215,7 +211,6 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
-        // Solo a cambio canzone: aggiorna artwork + notifica
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
@@ -223,7 +218,6 @@ class HomeController extends GetxController {
           titleValue.value = newTitle;
           artistValue.value = newArtist;
 
-          // Aggiorna notifica SOLO al cambio canzone
           _updateNotification();
         }
 
@@ -330,19 +324,33 @@ class HomeController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
-        final nuovoTesto = data['testo']?.toString() ?? '';
-        final nuovoAttivo = data['attivo'] == true;
-        final nuovoTipo = data['tipo']?.toString() ?? 'scroll';
-        final nuovoUrl = data['url']?.toString() ?? '';
+        final attivo = data['attivo'] == true;
+        final lista = data['messaggi'] as List?;
 
-        if (nuovoTesto != rdsTesto.value) {
-          rdsPopupDismissed.value = false;
+        if (attivo && lista != null && lista.isNotEmpty) {
+          final nuovi = <Map<String, String>>[];
+          for (final m in lista) {
+            nuovi.add({
+              'testo': m['testo']?.toString() ?? '',
+              'tipo': m['tipo']?.toString() ?? 'scroll',
+              'url': m['url']?.toString() ?? '',
+            });
+          }
+
+          // Reset popup dismissed se i messaggi sono cambiati
+          final vecchiTesti = rdsMessaggi.map((m) => m['testo']).toList();
+          final nuoviTesti = nuovi.map((m) => m['testo']).toList();
+          if (vecchiTesti.toString() != nuoviTesti.toString()) {
+            rdsDismissed.clear();
+          }
+
+          rdsAttivo.value = true;
+          rdsMessaggi.value = nuovi;
+        } else {
+          rdsAttivo.value = false;
+          rdsMessaggi.clear();
         }
 
-        rdsAttivo.value = nuovoAttivo && nuovoTesto.isNotEmpty;
-        rdsTesto.value = nuovoTesto;
-        rdsTipo.value = nuovoTipo;
-        rdsUrl.value = nuovoUrl;
         update();
       }
     } catch (e) {
@@ -350,8 +358,8 @@ class HomeController extends GetxController {
     }
   }
 
-  void dismissRdsPopup() {
-    rdsPopupDismissed.value = true;
+  void dismissRdsPopup(int index) {
+    rdsDismissed.add(index);
     update();
   }
 

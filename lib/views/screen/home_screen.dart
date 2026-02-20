@@ -103,9 +103,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // RDS WIDGETS
   // ============================================================================
 
-  Widget _buildRdsMarquee() {
+  Widget _buildRdsMarquee(String testo, String url) {
     return GestureDetector(
-      onTap: () => _openRdsLink(),
+      onTap: () => _openLink(url),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.w),
         child: Container(
@@ -130,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               const SizedBox(width: 10),
               Expanded(
                 child: _MarqueeText(
-                  text: _controller.rdsTesto.value,
+                  text: testo,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildRdsPopup() {
+  Widget _buildRdsPopup(String testo, String url, int index) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Container(
@@ -171,9 +171,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
-                onTap: () => _openRdsLink(),
+                onTap: () => _openLink(url),
                 child: Text(
-                  _controller.rdsTesto.value,
+                  testo,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () => _controller.dismissRdsPopup(),
+              onTap: () => _controller.dismissRdsPopup(index),
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -202,14 +202,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _openRdsLink() async {
-    final link = _controller.rdsUrl.value;
+  void _openLink(String link) async {
     if (link.isNotEmpty) {
       final url = Uri.parse(link);
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       }
     }
+  }
+
+  Widget _buildRdsSection() {
+    return Obx(() {
+      if (!_controller.rdsAttivo.value || _controller.rdsMessaggi.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      final widgets = <Widget>[];
+
+      for (int i = 0; i < _controller.rdsMessaggi.length; i++) {
+        final msg = _controller.rdsMessaggi[i];
+        final testo = msg['testo'] ?? '';
+        final tipo = msg['tipo'] ?? 'scroll';
+        final url = msg['url'] ?? '';
+
+        if (testo.isEmpty) continue;
+
+        if (tipo == 'popup') {
+          if (_controller.rdsDismissed.contains(i)) continue;
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildRdsPopup(testo, url, i),
+          ));
+        } else {
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildRdsMarquee(testo, url),
+          ));
+        }
+      }
+
+      if (widgets.isEmpty) return const SizedBox.shrink();
+
+      return Column(children: widgets);
+    });
   }
 
   // ============================================================================
@@ -259,23 +294,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
             addVerticalSpace(Dimensions.marginSize),
 
-            // RDS MESSAGE
-            Obx(() {
-              if (!_controller.rdsAttivo.value) return const SizedBox.shrink();
-
-              if (_controller.rdsTipo.value == 'popup') {
-                if (_controller.rdsPopupDismissed.value) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildRdsPopup(),
-                );
-              }
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildRdsMarquee(),
-              );
-            }),
+            // RDS MESSAGGI
+            _buildRdsSection(),
 
             // SHOW IN ONDA o PROSSIMA DIRETTA
             Obx(() {
