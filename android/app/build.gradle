@@ -44,6 +44,8 @@ android {
         versionName flutterVersionName
         versionCode 3
         versionName flutterVersionName
+        versionCode 3
+        versionName flutterVersionName
     }
     signingConfigs {
         release {
@@ -62,4 +64,5 @@ android {
 flutter {
     source '../..'
 }
+
 
