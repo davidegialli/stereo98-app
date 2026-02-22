@@ -23,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final sliderValue = 0.7.obs;
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnim;
-  bool _premioShown = false;
 
   Widget _buildCopertina({required bool isShimmer}) {
     return Container(
@@ -74,6 +73,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _shimmerAnim = Tween<double>(begin: -1.0, end: 2.0).animate(
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
+
+    // Monitora premio — ever() per cambiamenti + check iniziale dopo caricamento
+    ever(_controller.premioMessaggio, (String msg) {
+      if (msg.isNotEmpty && mounted) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _showPremioDialog(msg);
+        });
+      }
+    });
+
+    // Check iniziale dopo che getFanProfile() ha avuto tempo di caricare
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted && _controller.premioMessaggio.value.isNotEmpty) {
+        _showPremioDialog(_controller.premioMessaggio.value);
+      }
+    });
   }
 
   @override
@@ -84,9 +99,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    // Controlla premio da mostrare
-    _checkPremio();
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -134,23 +146,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // ==========================================================================
   // PREMIO POPUP
   // ==========================================================================
-  void _checkPremio() {
-    if (_premioShown) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_controller.premioMessaggio.value.isNotEmpty && !_premioShown) {
-        _premioShown = true;
-        _showPremioDialog(_controller.premioMessaggio.value);
-      }
-    });
-    // Monitora cambio premio
-    ever(_controller.premioMessaggio, (String msg) {
-      if (msg.isNotEmpty && mounted) {
-        _showPremioDialog(msg);
-      }
-    });
-  }
+
+  bool _premioDialogShowing = false;
 
   void _showPremioDialog(String messaggio) {
+    if (_premioDialogShowing || messaggio.isEmpty) return;
+    _premioDialogShowing = true;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -204,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               GestureDetector(
                 onTap: () {
                   _controller.dismissPremio();
+                  _premioDialogShowing = false;
                   Navigator.of(ctx).pop();
                 },
                 child: Container(

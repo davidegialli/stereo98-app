@@ -362,6 +362,21 @@ class HomeController extends GetxController {
   void dismissPremio() {
     premioMessaggio.value = '';
     update();
+    // Conferma lettura al server
+    _confirmPremioLetto();
+  }
+
+  Future<void> _confirmPremioLetto() async {
+    try {
+      await http.post(
+        Uri.parse('$fanApiUrl/letto'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'device_id': _deviceId}),
+      ).timeout(const Duration(seconds: 10));
+      if (kDebugMode) print('[Stereo98] Premio confermato come letto');
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Premio letto error: $e');
+    }
   }
 
   // ==========================================================================
