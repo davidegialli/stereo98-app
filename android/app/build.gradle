@@ -38,7 +38,7 @@ android {
         multiDexEnabled true
         minSdkVersion 25
         targetSdkVersion 35
-        versionCode 5
+        versionCode 6
         versionName flutterVersionName
     }
     signingConfigs {

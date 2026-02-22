@@ -1,9 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:animate_icons/animate_icons.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -60,9 +63,8 @@ class HomeController extends GetxController {
   var currentSongFavorited = false.obs;
   var localFavorites = <Map<String, String>>[].obs;
 
-  // 🎁 Premio — callback diretto alla UI
+  // 🎁 Premio
   var premioMessaggio = ''.obs;
-  void Function(String messaggio)? onPremioReceived;
 
   // Chart
   var chart = <Map<String, dynamic>>[].obs;
@@ -353,7 +355,13 @@ class HomeController extends GetxController {
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         fanCode.value = data['fan_code']?.toString() ?? '';
-        fanNome.value = data['nome']?.toString() ?? '';
+        final nome = data['nome']?.toString() ?? '';
+        if (nome.isNotEmpty) {
+          fanNome.value = nome;
+          _box.write('stereo98_fan_nome', nome);
+        } else if (fanNome.value.isEmpty) {
+          fanNome.value = _box.read('stereo98_fan_nome') ?? '';
+        }
         fanTotalVotes.value = data['totale_likes'] ?? 0;
         fanPosizione.value = data['posizione_classifica'];
 
@@ -365,12 +373,13 @@ class HomeController extends GetxController {
           _box.write('stereo98_fan_code', fanCode.value);
         }
 
-        // PREMIO — callback diretto alla UI
+        // PREMIO — usa Get.dialog che funziona sempre
         final premio = data['premio']?.toString() ?? '';
-        if (premio.isNotEmpty) {
+        if (premio.isNotEmpty && premioMessaggio.value != premio) {
           if (kDebugMode) print('[Stereo98] PREMIO RICEVUTO: $premio');
           premioMessaggio.value = premio;
-          onPremioReceived?.call(premio);
+          // Notifica UI
+          _mostraPremio(premio);
         }
       }
     } catch (e) {
@@ -400,6 +409,88 @@ class HomeController extends GetxController {
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Update nome error: $e');
     }
+  }
+
+  bool _premioShowing = false;
+
+  void _mostraPremio(String messaggio) {
+    if (_premioShowing || messaggio.isEmpty) return;
+    _premioShowing = true;
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+            ),
+            border: Border.all(color: const Color(0xFFD85D9D), width: 2),
+            boxShadow: [
+              BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🎉', style: TextStyle(fontSize: 50)),
+              const SizedBox(height: 12),
+              const Text(
+                'HAI VINTO!',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                messaggio,
+                style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+              if (fanCode.value.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFD85D9D).withOpacity(0.2),
+                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    'Il tuo codice: ${fanCode.value}',
+                    style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  _premioShowing = false;
+                  dismissPremio();
+                  Get.back();
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
+                  ),
+                  child: const Text(
+                    'FANTASTICO!',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void dismissPremio() {

@@ -23,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final sliderValue = 0.7.obs;
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnim;
-  bool _premioDialogShowing = false;
 
   @override
   void initState() {
@@ -32,118 +31,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _shimmerAnim = Tween<double>(begin: -1.0, end: 2.0).animate(
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
-
-    // Registra callback premio — il controller chiama direttamente questa funzione
-    _controller.onPremioReceived = (String msg) {
-      if (mounted && msg.isNotEmpty && !_premioDialogShowing) {
-        // Piccolo delay per assicurare che il context sia pronto
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted && !_premioDialogShowing) {
-            _showPremioDialog(msg);
-          }
-        });
-      }
-    };
-
-    // Check iniziale dopo caricamento profilo fan (2s init + 1s buffer)
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted &&
-          _controller.premioMessaggio.value.isNotEmpty &&
-          !_premioDialogShowing) {
-        _showPremioDialog(_controller.premioMessaggio.value);
-      }
-    });
   }
 
   @override
   void dispose() {
-    _controller.onPremioReceived = null;
     _shimmerController.dispose();
     super.dispose();
-  }
-
-  // ==========================================================================
-  // PREMIO POPUP
-  // ==========================================================================
-  void _showPremioDialog(String messaggio) {
-    if (_premioDialogShowing || messaggio.isEmpty || !mounted) return;
-    _premioDialogShowing = true;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
-            ),
-            border: Border.all(color: const Color(0xFFD85D9D), width: 2),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🎉', style: TextStyle(fontSize: 50)),
-              const SizedBox(height: 12),
-              const Text(
-                'HAI VINTO!',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                messaggio,
-                style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
-                textAlign: TextAlign.center,
-              ),
-              if (_controller.fanCode.value.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFFD85D9D).withOpacity(0.2),
-                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
-                  ),
-                  child: Text(
-                    'Il tuo codice: ${_controller.fanCode.value}',
-                    style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  _controller.dismissPremio();
-                  _premioDialogShowing = false;
-                  Navigator.of(ctx).pop();
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
-                  ),
-                  child: const Text(
-                    'FANTASTICO!',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   // ==========================================================================
@@ -609,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Column(
           children: [
             _upperContainer(context),
-            addVerticalSpace(Dimensions.marginSize * 0.5),
+            addVerticalSpace(6),
 
             // ===================== FAN CODE (sopra il play) =====================
             Obx(() {
@@ -617,8 +510,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               return GestureDetector(
                 onTap: () => _showFanProfileDialog(),
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: const Color(0xFFD85D9D).withOpacity(0.1),
@@ -769,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
 
-            addVerticalSpace(Dimensions.marginSize),
+            addVerticalSpace(12),
 
             // RDS MESSAGGI
             _buildRdsSection(),
