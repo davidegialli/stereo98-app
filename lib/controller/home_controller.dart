@@ -227,8 +227,8 @@ class HomeController extends GetxController {
         if (data['fan_code'] != null) {
           fanCode.value = data['fan_code'];
         }
-        // Aggiorna preferiti e chart in background
-        getPreferiti();
+        // Aggiorna preferiti e chart in background (senza ricontrollare like)
+        _refreshPreferitiSilent();
         getChart();
         getFanProfile();
       }
@@ -276,6 +276,25 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Preferiti error: $e');
+    }
+  }
+
+  // Aggiorna lista preferiti senza toccare lo stato del cuore corrente
+  Future<void> _refreshPreferitiSilent() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$likesApiUrl?device_id=$_deviceId'),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final lista = data['likes'] as List?;
+        if (lista != null) {
+          preferiti.value = lista.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Preferiti silent error: $e');
     }
   }
 
