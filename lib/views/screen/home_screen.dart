@@ -712,11 +712,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   );
                 }),
-
-                const SizedBox(width: 20),
-
-                // Placeholder per bilanciare
-                const SizedBox(width: 44),
               ],
             ),
 

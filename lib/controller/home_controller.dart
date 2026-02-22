@@ -327,7 +327,8 @@ class HomeController extends GetxController {
 
     try {
       final response = await http.get(
-        Uri.parse('$likesApiUrl?device_id=$_deviceId'),
+        Uri.parse('$likesApiUrl?device_id=$_deviceId&_t=${DateTime.now().millisecondsSinceEpoch}'),
+        headers: {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -351,7 +352,8 @@ class HomeController extends GetxController {
   Future<void> getChart({String periodo = 'settimana'}) async {
     try {
       final response = await http.get(
-        Uri.parse('$chartApiUrl?periodo=$periodo&device_id=$_deviceId&limit=20'),
+        Uri.parse('$chartApiUrl?periodo=$periodo&device_id=$_deviceId&limit=20&_t=${DateTime.now().millisecondsSinceEpoch}'),
+        headers: {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -372,7 +374,8 @@ class HomeController extends GetxController {
   Future<void> getFanProfile() async {
     try {
       final response = await http.get(
-        Uri.parse('$fanApiUrl?device_id=$_deviceId'),
+        Uri.parse('$fanApiUrl?device_id=$_deviceId&_t=${DateTime.now().millisecondsSinceEpoch}'),
+        headers: {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -605,8 +608,10 @@ class HomeController extends GetxController {
 
   Future<void> getPalinsesto() async {
     try {
-      final response = await http.get(Uri.parse(palinsestoUrl))
-          .timeout(const Duration(seconds: 15));
+      final response = await http.get(
+        Uri.parse('$palinsestoUrl?_t=${DateTime.now().millisecondsSinceEpoch}'),
+        headers: {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'},
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
