@@ -654,36 +654,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   )),
                 ),
 
-                const SizedBox(width: 14),
-
-                // ❤️ CUORE — preferiti locali, sempre attivo
-                Obx(() => GestureDetector(
-                  onTap: () => _controller.toggleFavorite(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _controller.currentSongFavorited.value
-                        ? const Color(0xFFD85D9D).withOpacity(0.2)
-                        : Colors.white.withOpacity(0.08),
-                      border: Border.all(
-                        color: _controller.currentSongFavorited.value
-                          ? const Color(0xFFD85D9D).withOpacity(0.6)
-                          : Colors.white.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Icon(
-                      _controller.currentSongFavorited.value ? Icons.favorite : Icons.favorite_border,
-                      color: _controller.currentSongFavorited.value
-                        ? const Color(0xFFD85D9D)
-                        : Colors.white54,
-                      size: 22,
-                    ),
-                  ),
-                )),
-
-                const SizedBox(width: 14),
+                const SizedBox(width: 20),
 
                 // ▶️ PLAY BUTTON
                 Obx(() => GestureDetector(
@@ -709,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 )),
 
-                const SizedBox(width: 14),
+                const SizedBox(width: 20),
 
                 // ⭐ STELLA — voto chart, solo con play attivo
                 Obx(() {
@@ -742,9 +713,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   );
                 }),
 
-                const SizedBox(width: 14),
+                const SizedBox(width: 20),
 
-                // Placeholder per bilanciare (stessa larghezza del sleep)
+                // Placeholder per bilanciare
                 const SizedBox(width: 44),
               ],
             ),

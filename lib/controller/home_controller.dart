@@ -408,7 +408,7 @@ class HomeController extends GetxController {
           Get.rawSnackbar(
             message: '🎁 Premio trovato: $premio',
             duration: const Duration(seconds: 3),
-            backgroundColor: const Color(0xFFD85D9D),
+            backgroundColor: Color(0xFFD85D9D),
           );
         }
       }
