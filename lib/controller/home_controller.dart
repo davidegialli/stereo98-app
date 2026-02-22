@@ -20,6 +20,7 @@ class HomeController extends GetxController {
   Timer? _rdsTimer;
   Timer? _sleepTimer;
   Timer? _sleepTickTimer;
+  Timer? _premioCheckTimer;
 
   var isPressed = false.obs;
   var isLoading = false.obs;
@@ -39,27 +40,36 @@ class HomeController extends GetxController {
   var whatsappNumber = ''.obs;
   var whatsappStudio = ''.obs;
 
-  // RDS - messaggi multipli
+  // RDS
   var rdsAttivo = false.obs;
   var rdsMessaggi = <Map<String, String>>[].obs;
   var rdsDismissed = <int>{}.obs;
 
   // Sleep Timer
-  var sleepTimerMinutes = 0.obs;       // 0 = disattivo
-  var sleepTimerRemaining = 0.obs;     // secondi rimanenti
+  var sleepTimerMinutes = 0.obs;
+  var sleepTimerRemaining = 0.obs;
 
-  // Preferiti / Chart
-  var currentSongLiked = false.obs;
+  // ⭐ Voto Chart (server)
+  var currentSongVoted = false.obs;
   var fanCode = ''.obs;
   var fanNome = ''.obs;
-  var fanTotalLikes = 0.obs;
+  var fanTotalVotes = 0.obs;
   var fanPosizione = Rxn<int>();
+
+  // ❤️ Preferiti locali (GetStorage)
+  var currentSongFavorited = false.obs;
+  var localFavorites = <Map<String, String>>[].obs;
+
+  // 🎁 Premio — callback diretto alla UI
   var premioMessaggio = ''.obs;
-  var preferiti = <Map<String, dynamic>>[].obs;
+  void Function(String messaggio)? onPremioReceived;
+
+  // Chart
   var chart = <Map<String, dynamic>>[].obs;
 
   bool _isStartingPlay = false;
   late String _deviceId;
+  late GetStorage _box;
 
   static const String streamUrl = 'https://c40.radioboss.fm:8083/stream';
   static const String radiobossStatusUrl = 'https://c40.radioboss.fm:8083/status-json.xsl';
@@ -81,8 +91,10 @@ class HomeController extends GetxController {
     super.onInit();
     _audioHandler = Get.find<RadioAudioHandler>();
     controller = AnimateIconController();
+    _box = GetStorage();
 
     _initDeviceId();
+    _loadLocalFavorites();
 
     getNowPlaying();
     getPalinsesto();
@@ -91,6 +103,7 @@ class HomeController extends GetxController {
     timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
     _palinsestoTimer = Timer.periodic(const Duration(seconds: 30), (t) => getPalinsesto());
     _rdsTimer = Timer.periodic(const Duration(seconds: 30), (t) => getRds());
+    _premioCheckTimer = Timer.periodic(const Duration(seconds: 60), (t) => getFanProfile());
 
     _artworkRetryTimer = Timer.periodic(
       const Duration(minutes: 3),
@@ -125,19 +138,16 @@ class HomeController extends GetxController {
   // DEVICE ID
   // ==========================================================================
   void _initDeviceId() {
-    final box = GetStorage();
-    String? stored = box.read('stereo98_device_id');
+    String? stored = _box.read('stereo98_device_id');
     if (stored == null || stored.isEmpty) {
       stored = _generateDeviceId();
-      box.write('stereo98_device_id', stored);
+      _box.write('stereo98_device_id', stored);
     }
     _deviceId = stored;
     if (kDebugMode) print('[Stereo98] Device ID: $_deviceId');
 
-    // Carica profilo fan e preferiti
     Future.delayed(const Duration(seconds: 2), () {
       getFanProfile();
-      getPreferiti();
       getChart();
     });
   }
@@ -154,7 +164,6 @@ class HomeController extends GetxController {
   // SLEEP TIMER
   // ==========================================================================
   void setSleepTimer(int minutes) {
-    // Cancella timer precedente
     _sleepTimer?.cancel();
     _sleepTickTimer?.cancel();
 
@@ -167,7 +176,6 @@ class HomeController extends GetxController {
     sleepTimerMinutes.value = minutes;
     sleepTimerRemaining.value = minutes * 60;
 
-    // Countdown ogni secondo
     _sleepTickTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (sleepTimerRemaining.value <= 0) {
         t.cancel();
@@ -176,7 +184,6 @@ class HomeController extends GetxController {
       sleepTimerRemaining.value--;
     });
 
-    // Stop dopo X minuti
     _sleepTimer = Timer(Duration(minutes: minutes), () {
       stopStream();
       sleepTimerMinutes.value = 0;
@@ -186,9 +193,7 @@ class HomeController extends GetxController {
     });
   }
 
-  void cancelSleepTimer() {
-    setSleepTimer(0);
-  }
+  void cancelSleepTimer() => setSleepTimer(0);
 
   String get sleepTimerFormatted {
     final secs = sleepTimerRemaining.value;
@@ -199,15 +204,68 @@ class HomeController extends GetxController {
   }
 
   // ==========================================================================
-  // PREFERITI / LIKE
+  // ❤️ PREFERITI LOCALI (GetStorage — nessun server)
   // ==========================================================================
-  Future<void> toggleLike() async {
+  void _loadLocalFavorites() {
+    final stored = _box.read<List>('stereo98_favorites');
+    if (stored != null) {
+      localFavorites.value = stored
+          .map((e) => Map<String, String>.from(e as Map))
+          .toList();
+    }
+  }
+
+  void _saveLocalFavorites() {
+    _box.write('stereo98_favorites', localFavorites.toList());
+  }
+
+  void toggleFavorite() {
     final artista = artistValue.value;
     final titolo = titleValue.value;
     if (artista.isEmpty && titolo.isEmpty) return;
 
-    // Ottimistic UI
-    currentSongLiked.toggle();
+    final key = _branoKey(artista, titolo);
+    final idx = localFavorites.indexWhere((f) =>
+        _branoKey(f['artista'] ?? '', f['titolo'] ?? '') == key);
+
+    if (idx >= 0) {
+      localFavorites.removeAt(idx);
+      currentSongFavorited.value = false;
+    } else {
+      localFavorites.insert(0, {'artista': artista, 'titolo': titolo});
+      currentSongFavorited.value = true;
+    }
+    _saveLocalFavorites();
+    update();
+  }
+
+  void _checkIfCurrentSongFavorited() {
+    final artista = artistValue.value;
+    final titolo = titleValue.value;
+    if (artista.isEmpty && titolo.isEmpty) {
+      currentSongFavorited.value = false;
+      return;
+    }
+    final key = _branoKey(artista, titolo);
+    currentSongFavorited.value = localFavorites.any((f) =>
+        _branoKey(f['artista'] ?? '', f['titolo'] ?? '') == key);
+  }
+
+  String _branoKey(String artista, String titolo) {
+    return '${artista.toLowerCase().trim()}|${titolo.toLowerCase().trim()}';
+  }
+
+  // ==========================================================================
+  // ⭐ VOTO CHART (server — solo con play attivo)
+  // ==========================================================================
+  Future<void> toggleVote() async {
+    if (!isPressed.value) return;
+
+    final artista = artistValue.value;
+    final titolo = titleValue.value;
+    if (artista.isEmpty && titolo.isEmpty) return;
+
+    currentSongVoted.toggle();
     update();
 
     try {
@@ -223,79 +281,46 @@ class HomeController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
-        currentSongLiked.value = data['liked'] == true;
+        currentSongVoted.value = data['liked'] == true;
         if (data['fan_code'] != null) {
           fanCode.value = data['fan_code'];
         }
-        // Aggiorna preferiti e chart in background (senza ricontrollare like)
-        _refreshPreferitiSilent();
         getChart();
         getFanProfile();
       }
     } catch (e) {
-      // Rollback
-      currentSongLiked.toggle();
-      if (kDebugMode) print('[Stereo98] Like error: $e');
+      currentSongVoted.toggle();
+      if (kDebugMode) print('[Stereo98] Vote error: $e');
     }
     update();
   }
 
-  Future<void> _checkIfCurrentSongLiked() async {
+  Future<void> _checkIfCurrentSongVoted() async {
     final artista = artistValue.value;
     final titolo = titleValue.value;
     if (artista.isEmpty && titolo.isEmpty) {
-      currentSongLiked.value = false;
+      currentSongVoted.value = false;
       return;
     }
 
-    // Controlla nella lista preferiti locale
-    final hash = _branoHash(artista, titolo);
-    currentSongLiked.value = preferiti.any((p) =>
-      _branoHash(p['artista'] ?? '', p['titolo'] ?? '') == hash
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$likesApiUrl?device_id=$_deviceId'),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final lista = data['likes'] as List?;
+        if (lista != null) {
+          final key = _branoKey(artista, titolo);
+          currentSongVoted.value = lista.any((p) =>
+              _branoKey(p['artista'] ?? '', p['titolo'] ?? '') == key);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Check vote error: $e');
+    }
     update();
-  }
-
-  String _branoHash(String artista, String titolo) {
-    return '${artista.toLowerCase().trim()}|${titolo.toLowerCase().trim()}';
-  }
-
-  Future<void> getPreferiti() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$likesApiUrl?device_id=$_deviceId'),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes));
-        final lista = data['likes'] as List?;
-        if (lista != null) {
-          preferiti.value = lista.map((e) => Map<String, dynamic>.from(e)).toList();
-        }
-        _checkIfCurrentSongLiked();
-      }
-    } catch (e) {
-      if (kDebugMode) print('[Stereo98] Preferiti error: $e');
-    }
-  }
-
-  // Aggiorna lista preferiti senza toccare lo stato del cuore corrente
-  Future<void> _refreshPreferitiSilent() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$likesApiUrl?device_id=$_deviceId'),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes));
-        final lista = data['likes'] as List?;
-        if (lista != null) {
-          preferiti.value = lista.map((e) => Map<String, dynamic>.from(e)).toList();
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print('[Stereo98] Preferiti silent error: $e');
-    }
   }
 
   Future<void> getChart({String periodo = 'settimana'}) async {
@@ -329,17 +354,34 @@ class HomeController extends GetxController {
         final data = json.decode(utf8.decode(response.bodyBytes));
         fanCode.value = data['fan_code']?.toString() ?? '';
         fanNome.value = data['nome']?.toString() ?? '';
-        fanTotalLikes.value = data['totale_likes'] ?? 0;
+        fanTotalVotes.value = data['totale_likes'] ?? 0;
         fanPosizione.value = data['posizione_classifica'];
 
-        // Controlla premio
+        // Salva localmente come backup
+        if (fanNome.value.isNotEmpty) {
+          _box.write('stereo98_fan_nome', fanNome.value);
+        }
+        if (fanCode.value.isNotEmpty) {
+          _box.write('stereo98_fan_code', fanCode.value);
+        }
+
+        // PREMIO — callback diretto alla UI
         final premio = data['premio']?.toString() ?? '';
         if (premio.isNotEmpty) {
+          if (kDebugMode) print('[Stereo98] PREMIO RICEVUTO: $premio');
           premioMessaggio.value = premio;
+          onPremioReceived?.call(premio);
         }
       }
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Fan profile error: $e');
+      // Fallback locale
+      if (fanNome.value.isEmpty) {
+        fanNome.value = _box.read('stereo98_fan_nome') ?? '';
+      }
+      if (fanCode.value.isEmpty) {
+        fanCode.value = _box.read('stereo98_fan_code') ?? '';
+      }
     }
   }
 
@@ -354,6 +396,7 @@ class HomeController extends GetxController {
         }),
       ).timeout(const Duration(seconds: 10));
       fanNome.value = nome;
+      _box.write('stereo98_fan_nome', nome);
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Update nome error: $e');
     }
@@ -362,7 +405,6 @@ class HomeController extends GetxController {
   void dismissPremio() {
     premioMessaggio.value = '';
     update();
-    // Conferma lettura al server
     _confirmPremioLetto();
   }
 
@@ -458,6 +500,7 @@ class HomeController extends GetxController {
     _rdsTimer?.cancel();
     _sleepTimer?.cancel();
     _sleepTickTimer?.cancel();
+    _premioCheckTimer?.cancel();
     _audioHandler.dispose();
     super.dispose();
   }
@@ -507,7 +550,8 @@ class HomeController extends GetxController {
           artistValue.value = newArtist;
 
           _updateNotification();
-          _checkIfCurrentSongLiked();
+          _checkIfCurrentSongFavorited();
+          _checkIfCurrentSongVoted();
         }
 
         update();
@@ -626,7 +670,6 @@ class HomeController extends GetxController {
             });
           }
 
-          // Reset popup dismissed se i messaggi sono cambiati
           final vecchiTesti = rdsMessaggi.map((m) => m['testo']).toList();
           final nuoviTesti = nuovi.map((m) => m['testo']).toList();
           if (vecchiTesti.toString() != nuoviTesti.toString()) {

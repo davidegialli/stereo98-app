@@ -23,48 +23,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final sliderValue = 0.7.obs;
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnim;
-
-  Widget _buildCopertina({required bool isShimmer}) {
-    return Container(
-      width: 280,
-      height: 280,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD85D9D).withOpacity(isShimmer ? 0.7 : 0.4),
-            blurRadius: isShimmer ? 30 : 20,
-            spreadRadius: isShimmer ? 5 : 2,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              color: Colors.black,
-              padding: const EdgeInsets.all(40),
-              child: Image.asset(
-                'assets/images/logo_header.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-            AnimatedOpacity(
-              opacity: _controller.artworkOpacity.value,
-              duration: const Duration(milliseconds: 400),
-              child: Image.network(
-                _controller.artworkUrl.value,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  bool _premioDialogShowing = false;
 
   @override
   void initState() {
@@ -74,18 +33,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
 
-    // Monitora premio — ever() per cambiamenti + check iniziale dopo caricamento
-    ever(_controller.premioMessaggio, (String msg) {
-      if (msg.isNotEmpty && mounted) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) _showPremioDialog(msg);
+    // Registra callback premio — il controller chiama direttamente questa funzione
+    _controller.onPremioReceived = (String msg) {
+      if (mounted && msg.isNotEmpty && !_premioDialogShowing) {
+        // Piccolo delay per assicurare che il context sia pronto
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted && !_premioDialogShowing) {
+            _showPremioDialog(msg);
+          }
         });
       }
-    });
+    };
 
-    // Check iniziale dopo che getFanProfile() ha avuto tempo di caricare
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted && _controller.premioMessaggio.value.isNotEmpty) {
+    // Check iniziale dopo caricamento profilo fan (2s init + 1s buffer)
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted &&
+          _controller.premioMessaggio.value.isNotEmpty &&
+          !_premioDialogShowing) {
         _showPremioDialog(_controller.premioMessaggio.value);
       }
     });
@@ -93,64 +57,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _controller.onPremioReceived = null;
     _shimmerController.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        title: Align(
-          alignment: Alignment.centerRight,
-          child: Image.asset('assets/images/logo_header.png', height: 40, fit: BoxFit.contain),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          // Sleep Timer indicator
-          Obx(() {
-            if (_controller.sleepTimerMinutes.value <= 0) return const SizedBox.shrink();
-            return GestureDetector(
-              onTap: () => _showSleepTimerDialog(),
-              child: Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: const Color(0xFF4EC8E8).withOpacity(0.2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.bedtime, color: Color(0xFF4EC8E8), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      _controller.sleepTimerFormatted,
-                      style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-      drawer: DrawerScreen(),
-      body: _bodyWidget(context),
-    );
   }
 
   // ==========================================================================
   // PREMIO POPUP
   // ==========================================================================
-
-  bool _premioDialogShowing = false;
-
   void _showPremioDialog(String messaggio) {
-    if (_premioDialogShowing || messaggio.isEmpty) return;
+    if (_premioDialogShowing || messaggio.isEmpty || !mounted) return;
     _premioDialogShowing = true;
 
     showDialog(
@@ -378,9 +294,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               const SizedBox(height: 6),
               Obx(() {
                 final pos = _controller.fanPosizione.value;
-                final likes = _controller.fanTotalLikes.value;
+                final votes = _controller.fanTotalVotes.value;
                 return Text(
-                  '❤️ $likes cuori${pos != null ? ' • 🏆 Posizione #$pos' : ''}',
+                  '⭐ $votes voti${pos != null ? ' • 🏆 Posizione #$pos' : ''}',
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                 );
               }),
@@ -584,6 +500,98 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
   }
 
+  Widget _buildCopertina({required bool isShimmer}) {
+    return Container(
+      width: 280,
+      height: 280,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD85D9D).withOpacity(isShimmer ? 0.7 : 0.4),
+            blurRadius: isShimmer ? 30 : 20,
+            spreadRadius: isShimmer ? 5 : 2,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              color: Colors.black,
+              padding: const EdgeInsets.all(40),
+              child: Image.asset(
+                'assets/images/logo_header.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            AnimatedOpacity(
+              opacity: _controller.artworkOpacity.value,
+              duration: const Duration(milliseconds: 400),
+              child: Image.network(
+                _controller.artworkUrl.value,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // BUILD
+  // ============================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: Align(
+          alignment: Alignment.centerRight,
+          child: Image.asset('assets/images/logo_header.png', height: 40, fit: BoxFit.contain),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          // Sleep Timer indicator in app bar
+          Obx(() {
+            if (_controller.sleepTimerMinutes.value <= 0) return const SizedBox.shrink();
+            return GestureDetector(
+              onTap: () => _showSleepTimerDialog(),
+              child: Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF4EC8E8).withOpacity(0.2),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bedtime, color: Color(0xFF4EC8E8), size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      _controller.sleepTimerFormatted,
+                      style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+      drawer: DrawerScreen(),
+      body: _bodyWidget(context),
+    );
+  }
+
   // ============================================================================
   // BODY
   // ============================================================================
@@ -601,9 +609,42 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Column(
           children: [
             _upperContainer(context),
-            addVerticalSpace(Dimensions.marginSize),
+            addVerticalSpace(Dimensions.marginSize * 0.5),
 
-            // PLAY BUTTON + SLEEP + HEART ROW
+            // ===================== FAN CODE (sopra il play) =====================
+            Obx(() {
+              if (_controller.fanCode.value.isEmpty) return const SizedBox.shrink();
+              return GestureDetector(
+                onTap: () => _showFanProfileDialog(),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFD85D9D).withOpacity(0.1),
+                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.person, color: Color(0xFFD85D9D), size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        _controller.fanNome.value.isNotEmpty
+                          ? '${_controller.fanNome.value} • ${_controller.fanCode.value}'
+                          : _controller.fanCode.value,
+                        style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.edit, color: const Color(0xFFD85D9D).withOpacity(0.5), size: 12),
+                    ],
+                  ),
+                ),
+              );
+            }),
+
+            // =================== CONTROLS ROW ===================
+            // [🌙 Sleep] [❤️ Cuore] [▶️ Play] [⭐ Voto] 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -633,9 +674,38 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   )),
                 ),
 
-                const SizedBox(width: 20),
+                const SizedBox(width: 14),
 
-                // PLAY BUTTON
+                // ❤️ CUORE — preferiti locali, sempre attivo
+                Obx(() => GestureDetector(
+                  onTap: () => _controller.toggleFavorite(),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _controller.currentSongFavorited.value
+                        ? const Color(0xFFD85D9D).withOpacity(0.2)
+                        : Colors.white.withOpacity(0.08),
+                      border: Border.all(
+                        color: _controller.currentSongFavorited.value
+                          ? const Color(0xFFD85D9D).withOpacity(0.6)
+                          : Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Icon(
+                      _controller.currentSongFavorited.value ? Icons.favorite : Icons.favorite_border,
+                      color: _controller.currentSongFavorited.value
+                        ? const Color(0xFFD85D9D)
+                        : Colors.white54,
+                      size: 22,
+                    ),
+                  ),
+                )),
+
+                const SizedBox(width: 14),
+
+                // ▶️ PLAY BUTTON
                 Obx(() => GestureDetector(
                   onTap: () {
                     if (_controller.isPressed.value) {
@@ -659,68 +729,45 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 )),
 
-                const SizedBox(width: 20),
+                const SizedBox(width: 14),
 
-                // HEART BUTTON
-                Obx(() => GestureDetector(
-                  onTap: () => _controller.toggleLike(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _controller.currentSongLiked.value
-                        ? const Color(0xFFD85D9D).withOpacity(0.2)
-                        : Colors.white.withOpacity(0.08),
-                      border: Border.all(
-                        color: _controller.currentSongLiked.value
-                          ? const Color(0xFFD85D9D).withOpacity(0.6)
-                          : Colors.white.withOpacity(0.2),
+                // ⭐ STELLA — voto chart, solo con play attivo
+                Obx(() {
+                  final playActive = _controller.isPressed.value;
+                  final voted = _controller.currentSongVoted.value;
+                  return GestureDetector(
+                    onTap: playActive ? () => _controller.toggleVote() : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: voted
+                          ? const Color(0xFFFFD700).withOpacity(0.2)
+                          : Colors.white.withOpacity(playActive ? 0.08 : 0.03),
+                        border: Border.all(
+                          color: voted
+                            ? const Color(0xFFFFD700).withOpacity(0.6)
+                            : Colors.white.withOpacity(playActive ? 0.2 : 0.08),
+                        ),
+                      ),
+                      child: Icon(
+                        voted ? Icons.star : Icons.star_border,
+                        color: voted
+                          ? const Color(0xFFFFD700)
+                          : (playActive ? Colors.white54 : Colors.white24),
+                        size: 22,
                       ),
                     ),
-                    child: Icon(
-                      _controller.currentSongLiked.value ? Icons.favorite : Icons.favorite_border,
-                      color: _controller.currentSongLiked.value
-                        ? const Color(0xFFD85D9D)
-                        : Colors.white54,
-                      size: 22,
-                    ),
-                  ),
-                )),
+                  );
+                }),
+
+                const SizedBox(width: 14),
+
+                // Placeholder per bilanciare (stessa larghezza del sleep)
+                const SizedBox(width: 44),
               ],
             ),
-
-            // Fan code sotto i controlli
-            Obx(() {
-              if (_controller.fanCode.value.isEmpty) return const SizedBox.shrink();
-              return GestureDetector(
-                onTap: () => _showFanProfileDialog(),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFFD85D9D).withOpacity(0.1),
-                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.person, color: Color(0xFFD85D9D), size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        _controller.fanNome.value.isNotEmpty
-                          ? '${_controller.fanNome.value} • ${_controller.fanCode.value}'
-                          : _controller.fanCode.value,
-                        style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.edit, color: const Color(0xFFD85D9D).withOpacity(0.5), size: 12),
-                    ],
-                  ),
-                ),
-              );
-            }),
 
             addVerticalSpace(Dimensions.marginSize),
 
