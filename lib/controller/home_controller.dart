@@ -1,12 +1,9 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:animate_icons/animate_icons.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -65,6 +62,7 @@ class HomeController extends GetxController {
 
   // 🎁 Premio
   var premioMessaggio = ''.obs;
+  var premioPending = false.obs;
 
   // Chart
   var chart = <Map<String, dynamic>>[].obs;
@@ -151,6 +149,12 @@ class HomeController extends GetxController {
     Future.delayed(const Duration(seconds: 2), () {
       getFanProfile();
       getChart();
+    });
+
+    // Check voto canzone corrente dopo che getNowPlaying ha caricato (3s)
+    Future.delayed(const Duration(seconds: 4), () {
+      _checkIfCurrentSongVoted();
+      _checkIfCurrentSongFavorited();
     });
   }
 
@@ -267,7 +271,14 @@ class HomeController extends GetxController {
     final titolo = titleValue.value;
     if (artista.isEmpty && titolo.isEmpty) return;
 
+    final wasVoted = currentSongVoted.value;
     currentSongVoted.toggle();
+    // Aggiorna contatore ottimisticamente
+    if (currentSongVoted.value) {
+      fanTotalVotes.value++;
+    } else if (fanTotalVotes.value > 0) {
+      fanTotalVotes.value--;
+    }
     update();
 
     try {
@@ -283,15 +294,23 @@ class HomeController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
+        if (kDebugMode) print('[Stereo98] VOTE RESPONSE: $data');
         currentSongVoted.value = data['liked'] == true;
         if (data['fan_code'] != null) {
           fanCode.value = data['fan_code'];
         }
+        // Aggiorna dati reali dal server
         getChart();
         getFanProfile();
+      } else {
+        // Rollback
+        currentSongVoted.value = wasVoted;
+        fanTotalVotes.value += wasVoted ? 1 : -1;
       }
     } catch (e) {
-      currentSongVoted.toggle();
+      // Rollback
+      currentSongVoted.value = wasVoted;
+      fanTotalVotes.value += wasVoted ? 1 : -1;
       if (kDebugMode) print('[Stereo98] Vote error: $e');
     }
     update();
@@ -313,10 +332,13 @@ class HomeController extends GetxController {
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         final lista = data['likes'] as List?;
+        final key = _branoKey(artista, titolo);
+        if (kDebugMode) print('[Stereo98] CHECK VOTE: cerco "$key" in ${lista?.length ?? 0} likes');
         if (lista != null) {
-          final key = _branoKey(artista, titolo);
-          currentSongVoted.value = lista.any((p) =>
+          final found = lista.any((p) =>
               _branoKey(p['artista'] ?? '', p['titolo'] ?? '') == key);
+          currentSongVoted.value = found;
+          if (kDebugMode) print('[Stereo98] CHECK VOTE: trovato=$found');
         }
       }
     } catch (e) {
@@ -354,6 +376,7 @@ class HomeController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
+        if (kDebugMode) print('[Stereo98] FAN API RESPONSE: $data');
         fanCode.value = data['fan_code']?.toString() ?? '';
         final nome = data['nome']?.toString() ?? '';
         if (nome.isNotEmpty) {
@@ -363,6 +386,7 @@ class HomeController extends GetxController {
           fanNome.value = _box.read('stereo98_fan_nome') ?? '';
         }
         fanTotalVotes.value = data['totale_likes'] ?? 0;
+        if (kDebugMode) print('[Stereo98] VOTI TOTALI: ${fanTotalVotes.value}');
         fanPosizione.value = data['posizione_classifica'];
 
         // Salva localmente come backup
@@ -373,13 +397,19 @@ class HomeController extends GetxController {
           _box.write('stereo98_fan_code', fanCode.value);
         }
 
-        // PREMIO — usa Get.dialog che funziona sempre
+        // PREMIO
         final premio = data['premio']?.toString() ?? '';
-        if (premio.isNotEmpty && premioMessaggio.value != premio) {
-          if (kDebugMode) print('[Stereo98] PREMIO RICEVUTO: $premio');
+        if (kDebugMode) print('[Stereo98] PREMIO dalla API: "$premio" (pending attuale: ${premioPending.value})');
+        if (premio.isNotEmpty) {
           premioMessaggio.value = premio;
-          // Notifica UI
-          _mostraPremio(premio);
+          premioPending.value = true;
+          if (kDebugMode) print('[Stereo98] >>> PREMIO ATTIVO! premioPending = true');
+          // DEBUG: mostra snackbar per verificare che arriva
+          Get.rawSnackbar(
+            message: '🎁 Premio trovato: $premio',
+            duration: const Duration(seconds: 3),
+            backgroundColor: const Color(0xFFD85D9D),
+          );
         }
       }
     } catch (e) {
@@ -411,89 +441,8 @@ class HomeController extends GetxController {
     }
   }
 
-  bool _premioShowing = false;
-
-  void _mostraPremio(String messaggio) {
-    if (_premioShowing || messaggio.isEmpty) return;
-    _premioShowing = true;
-
-    Get.dialog(
-      Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
-            ),
-            border: Border.all(color: const Color(0xFFD85D9D), width: 2),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🎉', style: TextStyle(fontSize: 50)),
-              const SizedBox(height: 12),
-              const Text(
-                'HAI VINTO!',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                messaggio,
-                style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
-                textAlign: TextAlign.center,
-              ),
-              if (fanCode.value.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFFD85D9D).withOpacity(0.2),
-                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
-                  ),
-                  child: Text(
-                    'Il tuo codice: ${fanCode.value}',
-                    style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  _premioShowing = false;
-                  dismissPremio();
-                  Get.back();
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
-                  ),
-                  child: const Text(
-                    'FANTASTICO!',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   void dismissPremio() {
+    premioPending.value = false;
     premioMessaggio.value = '';
     update();
     _confirmPremioLetto();

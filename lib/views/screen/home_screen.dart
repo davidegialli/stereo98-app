@@ -481,7 +481,87 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
       ),
       drawer: DrawerScreen(),
-      body: _bodyWidget(context),
+      body: Stack(
+        children: [
+          _bodyWidget(context),
+          // PREMIO OVERLAY — widget nell'albero, funziona SEMPRE
+          Obx(() {
+            if (!_controller.premioPending.value) return const SizedBox.shrink();
+            return Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 30),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+                    ),
+                    border: Border.all(color: const Color(0xFFD85D9D), width: 2),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🎉', style: TextStyle(fontSize: 50)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'HAI VINTO!',
+                        style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _controller.premioMessaggio.value,
+                        style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (_controller.fanCode.value.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color(0xFFD85D9D).withOpacity(0.2),
+                            border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
+                          ),
+                          child: Text(
+                            'Il tuo codice: ${_controller.fanCode.value}',
+                            style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () => _controller.dismissPremio(),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
+                          ),
+                          child: const Text(
+                            'FANTASTICO!',
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -528,6 +608,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           : _controller.fanCode.value,
                         style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
+                      if (_controller.fanTotalVotes.value > 0) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          '⭐${_controller.fanTotalVotes.value}',
+                          style: TextStyle(color: const Color(0xFFFFD700).withOpacity(0.8), fontSize: 12),
+                        ),
+                      ],
                       const SizedBox(width: 4),
                       Icon(Icons.edit, color: const Color(0xFFD85D9D).withOpacity(0.5), size: 12),
                     ],
