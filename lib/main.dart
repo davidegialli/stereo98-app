@@ -15,6 +15,7 @@ import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/network_check/dependency_injection.dart';
 import 'package:stereo98/utils/strings.dart';
 import 'package:stereo98/utils/themes.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
    
     
 Future<void> main() async {
@@ -37,6 +38,10 @@ Future<void> main() async {
   await GetStorage.init();
   await initialConfig();
   InternetCheckDependencyInjection.init();
+
+  // OneSignal
+  OneSignal.initialize('0c551b09-62f8-4877-9f48-4b84b70f9546');
+  OneSignal.Notifications.requestPermission(true);
 
   try {
     final audioHandler = await AudioService.init(
@@ -72,7 +77,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
-  final String oneSignalAppId = '0c551b09-62f8-4877-9f48-4b84b70f9546';
 
   final dark = ThemeData.dark();
   final themeCollection = ThemeCollection(themes: {

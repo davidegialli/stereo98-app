@@ -4,11 +4,11 @@ import 'dart:math';
 
 import 'package:animate_icons/animate_icons.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:stereo98/services/audio_handler.dart';
 
 class HomeController extends GetxController {
@@ -150,6 +150,7 @@ class HomeController extends GetxController {
     Future.delayed(const Duration(seconds: 2), () {
       getFanProfile();
       getChart();
+      _saveOneSignalPlayerId();
     });
 
     // Check voto canzone corrente dopo che getNowPlaying ha caricato (3s)
@@ -166,6 +167,41 @@ class HomeController extends GetxController {
   }
 
   String get deviceId => _deviceId;
+
+  // ==========================================================================
+  // ONESIGNAL PLAYER ID
+  // ==========================================================================
+  Future<void> _saveOneSignalPlayerId() async {
+    // Prova subito
+    final playerId = OneSignal.User.pushSubscription.id;
+    if (playerId != null && playerId.isNotEmpty) {
+      _sendPlayerIdToServer(playerId);
+    }
+
+    // Ascolta cambiamenti (se il permesso viene dato dopo)
+    OneSignal.User.pushSubscription.addObserver((state) {
+      final id = state.current.id;
+      if (id != null && id.isNotEmpty) {
+        _sendPlayerIdToServer(id);
+      }
+    });
+  }
+
+  Future<void> _sendPlayerIdToServer(String playerId) async {
+    try {
+      await http.post(
+        Uri.parse(fanApiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'device_id': _deviceId,
+          'onesignal_player_id': playerId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      if (kDebugMode) print('[Stereo98] OneSignal player_id salvato: $playerId');
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] OneSignal save error: $e');
+    }
+  }
 
   // ==========================================================================
   // SLEEP TIMER
@@ -408,12 +444,6 @@ class HomeController extends GetxController {
           premioMessaggio.value = premio;
           premioPending.value = true;
           if (kDebugMode) print('[Stereo98] >>> PREMIO ATTIVO! premioPending = true');
-          // DEBUG: mostra snackbar per verificare che arriva
-          Get.rawSnackbar(
-            message: '🎁 Premio trovato: $premio',
-            duration: const Duration(seconds: 3),
-            backgroundColor: Color(0xFFD85D9D),
-          );
         }
       }
     } catch (e) {

@@ -34,8 +34,8 @@ class DrawerScreen extends StatelessWidget {
     onSubmitted: (response) {
       if (response.rating >= 3.0) {
         StoreRedirect.redirect(
-          androidAppId: 'com.stereo98.radio',
-          iOSAppId: 'com.stereo98.radio',
+          androidAppId: 'com.stereo98.dabplus',
+          iOSAppId: 'com.stereo98.dabplus',
         );
       }
     },

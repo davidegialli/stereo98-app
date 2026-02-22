@@ -3,7 +3,7 @@ description: Stereo 98 DAB+ Radio Streaming
 
 publish_to: 'none'
 
-version: 1.0.0+7
+version: 1.1.0+10
 
 environment:
   sdk: ">=3.5.0 <4.4.0"
@@ -28,6 +28,7 @@ dependencies:
   store_redirect: 2.0.4
   dynamic_themes: ^1.1.0
   http: 1.6.0
+  onesignal_flutter: ^5.2.7
   shimmer: ^3.0.0
   permission_handler: ^12.0.1
   connectivity_plus: ^7.0.0
