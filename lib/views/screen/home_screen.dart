@@ -446,39 +446,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: Align(
-          alignment: Alignment.centerRight,
-          child: Image.asset('assets/images/logo_header.png', height: 40, fit: BoxFit.contain),
+        title: Row(
+          children: [
+            // Sleep Timer indicator (sinistra)
+            Obx(() {
+              if (_controller.sleepTimerMinutes.value <= 0) return const SizedBox.shrink();
+              return GestureDetector(
+                onTap: () => _showSleepTimerDialog(),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF4EC8E8).withOpacity(0.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.bedtime, color: Color(0xFF4EC8E8), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        _controller.sleepTimerFormatted,
+                        style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const Spacer(),
+            // Logo (destra, posizione fissa)
+            Image.asset('assets/images/logo_header.png', height: 40, fit: BoxFit.contain),
+          ],
         ),
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          // Sleep Timer indicator in app bar
-          Obx(() {
-            if (_controller.sleepTimerMinutes.value <= 0) return const SizedBox.shrink();
-            return GestureDetector(
-              onTap: () => _showSleepTimerDialog(),
-              child: Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: const Color(0xFF4EC8E8).withOpacity(0.2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.bedtime, color: Color(0xFF4EC8E8), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      _controller.sleepTimerFormatted,
-                      style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
       ),
       drawer: DrawerScreen(),
       body: Stack(

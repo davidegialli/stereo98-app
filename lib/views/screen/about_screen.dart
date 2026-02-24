@@ -39,8 +39,6 @@ class AboutScreen extends StatelessWidget {
           padding: EdgeInsets.all(Dimensions.defaultPaddingSize),
           children: [
             addVerticalSpace(20.h),
-
-            // 🔥 LOGO IN ALTO
             Center(
               child: Container(
                 decoration: BoxDecoration(
@@ -64,10 +62,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             addVerticalSpace(24.h),
-
-            // 🔥 NOME RADIO
             const Center(
               child: Text(
                 'Stereo 98 DAB+',
@@ -78,10 +73,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             addVerticalSpace(6.h),
-
-            // 🔥 SOTTOTITOLO
             Center(
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
@@ -97,10 +89,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             addVerticalSpace(30.h),
-
-            // 🔥 DIVIDER
             Container(
               height: 1,
               decoration: const BoxDecoration(
@@ -109,10 +98,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             addVerticalSpace(24.h),
-
-            // 🔥 DESCRIZIONE
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -133,29 +119,22 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             addVerticalSpace(24.h),
-
-            // 🔥 INFO BOX
             _infoRow(Icons.radio, 'Frequenza', 'DAB+ Digitale Terrestre'),
             addVerticalSpace(10.h),
             _infoRow(Icons.wifi, 'Streaming', 'stereo98.com'),
             addVerticalSpace(10.h),
             _infoRow(Icons.location_on, 'Studi', 'Veneto • Piemonte • Lazio'),
-
             addVerticalSpace(40.h),
-
-            // 🔥 VERSIONE APP
             Center(
               child: Text(
-                'Versione 1.0.0',
+                'Versione 1.1.0',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.3),
                   fontSize: 12,
                 ),
               ),
             ),
-
             addVerticalSpace(20.h),
           ],
         ),

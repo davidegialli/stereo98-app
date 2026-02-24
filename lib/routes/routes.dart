@@ -8,6 +8,9 @@ import 'package:stereo98/views/screen/splash_screen.dart';
 import 'package:stereo98/views/screen/podcast_screen.dart';
 import 'package:stereo98/views/screen/palinsesto_screen.dart';
 import 'package:stereo98/views/screen/shows_screen.dart';
+import 'package:stereo98/views/screen/sondaggi_screen.dart';
+import 'package:stereo98/views/screen/scrivici_screen.dart';
+import 'package:stereo98/views/screen/istruzioni_screen.dart';
 
 class Routes {
   static const String splashScreen = '/splashScreen';
@@ -17,6 +20,9 @@ class Routes {
   static const String podcastScreen = '/podcastScreen';
   static const String palinsestoScreen = '/palinsestoScreen';
   static const String showsScreen = '/showsScreen';
+  static const String sondaggiScreen = '/sondaggiScreen';
+  static const String scriviciScreen = '/scriviciScreen';
+  static const String istruzioniScreen = '/istruzioniScreen';
 
   static var list = [
     GetPage(
@@ -34,5 +40,8 @@ class Routes {
     GetPage(name: podcastScreen, page: () => const PodcastScreen()),
     GetPage(name: palinsestoScreen, page: () => const PalinsestoScreen()),
     GetPage(name: showsScreen, page: () => const ShowsScreen()),
+    GetPage(name: sondaggiScreen, page: () => const SondaggiScreen()),
+    GetPage(name: scriviciScreen, page: () => const ScriviciScreen()),
+    GetPage(name: istruzioniScreen, page: () => const IstruzioniScreen()),
   ];
 }

@@ -35,7 +35,7 @@ class DrawerScreen extends StatelessWidget {
       if (response.rating >= 3.0) {
         StoreRedirect.redirect(
           androidAppId: 'com.stereo98.dabplus',
-          iOSAppId: 'com.stereo98.dabplus',
+          iOSAppId: '6759221003',
         );
       }
     },
@@ -83,25 +83,31 @@ class DrawerScreen extends StatelessWidget {
   Column _listWidget(BuildContext context) {
     return Column(
       children: [
-        // 🔥 Palinsesto
         MenuItemWidget(
           screenName: 'Palinsesto',
           icon: Icons.calendar_today,
           onPressed: () => Get.toNamed(Routes.palinsestoScreen),
         ),
-        // 🔥 Shows
         MenuItemWidget(
           screenName: 'Shows',
           icon: Icons.mic,
           onPressed: () => Get.toNamed(Routes.showsScreen),
         ),
-        // 🔥 Podcast
         MenuItemWidget(
           screenName: 'Podcast',
           icon: Icons.podcasts,
           onPressed: () => Get.toNamed(Routes.podcastScreen),
         ),
-        // 🔥 Website
+        MenuItemWidget(
+          screenName: 'Sondaggi',
+          icon: Icons.poll,
+          onPressed: () => Get.toNamed(Routes.sondaggiScreen),
+        ),
+        MenuItemWidget(
+          screenName: 'Scrivici',
+          icon: Icons.mail_outline,
+          onPressed: () => Get.toNamed(Routes.scriviciScreen),
+        ),
         MenuItemWidget(
           screenName: 'Website',
           icon: Icons.language,
@@ -112,19 +118,21 @@ class DrawerScreen extends StatelessWidget {
             }
           },
         ),
-        // 🔥 Chi Siamo
+        MenuItemWidget(
+          screenName: 'Come funziona',
+          icon: Icons.help_outline,
+          onPressed: () => Get.toNamed(Routes.istruzioniScreen),
+        ),
         MenuItemWidget(
           screenName: 'Chi Siamo',
           icon: Icons.info,
           onPressed: () => Get.toNamed(Routes.aboutScreen),
         ),
-        // 🔥 Impostazioni
         MenuItemWidget(
           screenName: 'Impostazioni',
           icon: Icons.settings,
           onPressed: () => Get.toNamed(Routes.settingsScreen),
         ),
-        // 🔥 Valutaci
         MenuItemWidget(
           screenName: 'Valutaci',
           icon: Icons.star_half,
