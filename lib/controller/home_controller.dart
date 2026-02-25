@@ -69,6 +69,7 @@ class HomeController extends GetxController {
   var chart = <Map<String, dynamic>>[].obs;
 
   bool _isStartingPlay = false;
+  int _artworkTs = 0;
   late String _deviceId;
   late GetStorage _box;
 
@@ -107,7 +108,7 @@ class HomeController extends GetxController {
     _premioCheckTimer = Timer.periodic(const Duration(seconds: 60), (t) => getFanProfile());
 
     _artworkRetryTimer = Timer.periodic(
-      const Duration(minutes: 3),
+      const Duration(seconds: 60),
       (t) {
         _refreshArtworkWithFade(shimmer: true);
         _updateNotification();
@@ -516,7 +517,7 @@ class HomeController extends GetxController {
     _audioHandler.updateNowPlaying(
       title: titleValue.value.isNotEmpty ? titleValue.value : 'Stereo 98 DAB+',
       artist: artistValue.value.isNotEmpty ? artistValue.value : 'In diretta',
-      artworkUri: Uri.parse('$radiobossArtworkUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
+      artworkUri: Uri.parse('$radiobossArtworkUrl?t=$_artworkTs'),
     );
   }
 
@@ -619,16 +620,15 @@ class HomeController extends GetxController {
         if (newTitle.isNotEmpty &&
             (titleValue.value != newTitle || artistValue.value != newArtist)) {
           _refreshArtworkWithFade();
+          _artworkTs = DateTime.now().millisecondsSinceEpoch;
 
           titleValue.value = newTitle;
           artistValue.value = newArtist;
 
+          _updateNotification();
           _checkIfCurrentSongFavorited();
           _checkIfCurrentSongVoted();
         }
-
-        // Aggiorna sempre la notifica per mantenerla sincronizzata
-        _updateNotification();
 
         update();
       }

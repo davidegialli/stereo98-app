@@ -3,7 +3,7 @@ description: Stereo 98 DAB+ Radio Streaming
 
 publish_to: 'none'
 
-version: 1.1.0+12
+version: 1.1.0+13
 
 environment:
   sdk: ">=3.5.0 <4.4.0"
