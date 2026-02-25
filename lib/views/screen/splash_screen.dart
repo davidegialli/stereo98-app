@@ -1,25 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import 'package:stereo98/controller/splash_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
+import 'package:stereo98/utils/dimsensions.dart';
+import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
+import 'package:stereo98/widget_helper/image_widget.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.find<SplashController>();
-
     return Scaffold(
-      backgroundColor: CustomColor.primaryColor,
-      body: Center(
-        child: Image.asset(
-          Strings.splashLogo,
-          width: 200.w,
-          height: 200.h,
-          fit: BoxFit.contain,
+      body: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).cardColor,
+              Theme.of(context).canvasColor,
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: mainSpaceBet,
+          children: [
+            Container(),
+            Column(
+              crossAxisAlignment: crossCenter,
+              children: const [ImageWidget()],
+            ),
+            Column(
+              crossAxisAlignment: crossCenter,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Dimensions.defaultPaddingSize,
+                  ),
+                  child: CircularProgressIndicator(
+                    color: CustomColor.primaryColor,
+                    backgroundColor: CustomColor.gray.withValues(alpha: 0.5),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(Dimensions.defaultPaddingSize * 0.5),
+                  child: const Text(
+                    Strings.version,
+                    style: TextStyle(
+                      color: CustomColor.whiteColor,
+                      fontSize: 10,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
