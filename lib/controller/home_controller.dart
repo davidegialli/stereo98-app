@@ -623,10 +623,12 @@ class HomeController extends GetxController {
           titleValue.value = newTitle;
           artistValue.value = newArtist;
 
-          _updateNotification();
           _checkIfCurrentSongFavorited();
           _checkIfCurrentSongVoted();
         }
+
+        // Aggiorna sempre la notifica per mantenerla sincronizzata
+        _updateNotification();
 
         update();
       }
