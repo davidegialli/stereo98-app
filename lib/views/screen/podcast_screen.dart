@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -74,7 +73,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
             : _podcasts.isEmpty
                 ? const Center(child: Text('Nessun podcast disponibile', style: TextStyle(color: Colors.white)))
                 : ListView.builder(
-                    padding: EdgeInsets.all(12.w),
+                    padding: const EdgeInsets.all(12),
                     itemCount: _podcasts.length,
                     itemBuilder: (context, i) {
                       final p = _podcasts[i];
@@ -85,7 +84,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                       final webUrl = p['url'] ?? '';
 
                       return Container(
-                        margin: EdgeInsets.only(bottom: 12.h),
+                        margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           gradient: LinearGradient(
@@ -97,11 +96,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
                         ),
                         child: ListTile(
-                          contentPadding: EdgeInsets.all(10.w),
+                          contentPadding: const EdgeInsets.all(10),
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: image.isNotEmpty
-                                ? Image.network(image, width: 60.w, height: 60.h, fit: BoxFit.cover,
+                                ? Image.network(image, width: 60, height: 60, fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => _placeholder())
                                 : _placeholder(),
                           ),
@@ -131,7 +130,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   Widget _placeholder() {
     return Container(
-      width: 60.w, height: 60.h,
+      width: 60, height: 60,
       decoration: BoxDecoration(
         color: const Color(0xFFD85D9D).withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),

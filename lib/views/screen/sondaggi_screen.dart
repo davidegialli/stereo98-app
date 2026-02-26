@@ -36,11 +36,33 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
             initialUrlRequest: URLRequest(
               url: WebUri('https://stereo98.com/sondaggi/'),
             ),
+            initialSettings: InAppWebViewSettings(
+              useWideViewPort: false,
+              loadWithOverviewMode: true,
+              supportZoom: true,
+              builtInZoomControls: false,
+            ),
             onWebViewCreated: (InAppWebViewController controller) {},
             onLoadStart: (InAppWebViewController controller, Uri? url) {
               setState(() { isLoading = true; });
             },
-            onLoadStop: (InAppWebViewController controller, Uri? url) {
+            onLoadStop: (InAppWebViewController controller, Uri? url) async {
+              // ✅ Forza il contenuto a stare dentro lo schermo
+              await controller.evaluateJavascript(source: '''
+                var style = document.createElement('style');
+                style.textContent = '* { max-width: 100vw !important; box-sizing: border-box !important; } html, body { overflow-x: hidden !important; width: 100% !important; }';
+                document.head.appendChild(style);
+                
+                var meta = document.querySelector('meta[name="viewport"]');
+                if (meta) {
+                  meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0';
+                } else {
+                  meta = document.createElement('meta');
+                  meta.name = 'viewport';
+                  meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0';
+                  document.head.appendChild(meta);
+                }
+              ''');
               setState(() { isLoading = false; });
             },
           ),

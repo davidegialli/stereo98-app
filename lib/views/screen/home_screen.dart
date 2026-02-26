@@ -253,9 +253,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return GestureDetector(
       onTap: () => _openLink(url),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
           width: double.infinity,
+          clipBehavior: Clip.hardEdge,
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -294,9 +295,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildRdsPopup(String testo, String url, int index) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         width: double.infinity,
+        clipBehavior: Clip.hardEdge,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -393,10 +395,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
   }
 
-  Widget _buildCopertina({required bool isShimmer}) {
+  // ============================================================================
+  // COPERTINA (artwork) — dimensione responsiva
+  // ============================================================================
+  Widget _buildCopertina({required bool isShimmer, double? size}) {
+    final artSize = size ?? 280.0;
     return Container(
-      width: 280,
-      height: 280,
+      width: artSize,
+      height: artSize,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -433,6 +439,324 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
     );
+  }
+
+  // ============================================================================
+  // SHARED WIDGETS (usati sia in portrait che landscape)
+  // ============================================================================
+
+  Widget _buildFanCodeBadge() {
+    return Obx(() {
+      if (_controller.fanCode.value.isEmpty) return const SizedBox.shrink();
+      return GestureDetector(
+        onTap: () => _showFanProfileDialog(),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: const Color(0xFFD85D9D).withOpacity(0.1),
+            border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person, color: Color(0xFFD85D9D), size: 14),
+              const SizedBox(width: 6),
+              Text(
+                _controller.fanNome.value.isNotEmpty
+                  ? '${_controller.fanNome.value} • ${_controller.fanCode.value}'
+                  : _controller.fanCode.value,
+                style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              if (_controller.fanTotalVotes.value > 0) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '⭐${_controller.fanTotalVotes.value}',
+                  style: TextStyle(color: const Color(0xFFFFD700).withOpacity(0.8), fontSize: 12),
+                ),
+              ],
+              const SizedBox(width: 4),
+              Icon(Icons.edit, color: const Color(0xFFD85D9D).withOpacity(0.5), size: 12),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildControlsRow({double playSize = 70}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Sleep Timer
+        GestureDetector(
+          onTap: () => _showSleepTimerDialog(),
+          child: Obx(() => Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _controller.sleepTimerMinutes.value > 0
+                ? const Color(0xFF4EC8E8).withOpacity(0.2)
+                : Colors.white.withOpacity(0.08),
+              border: Border.all(
+                color: _controller.sleepTimerMinutes.value > 0
+                  ? const Color(0xFF4EC8E8).withOpacity(0.6)
+                  : Colors.white.withOpacity(0.2),
+              ),
+            ),
+            child: Icon(
+              Icons.bedtime,
+              color: _controller.sleepTimerMinutes.value > 0
+                ? const Color(0xFF4EC8E8)
+                : Colors.white54,
+              size: 22,
+            ),
+          )),
+        ),
+
+        const SizedBox(width: 20),
+
+        // ▶️ PLAY BUTTON
+        Obx(() => GestureDetector(
+          onTap: () {
+            if (_controller.isPressed.value) {
+              _controller.stopStream();
+            } else {
+              _controller.playStream();
+            }
+          },
+          child: Container(
+            width: playSize,
+            height: playSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
+              boxShadow: [BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.5), blurRadius: 20, spreadRadius: 2)],
+            ),
+            child: Icon(
+              _controller.isPressed.value ? Icons.stop : Icons.play_arrow,
+              color: Colors.white, size: playSize * 0.57,
+            ),
+          ),
+        )),
+
+        const SizedBox(width: 20),
+
+        // ⭐ STELLA — voto chart, solo con play attivo
+        Obx(() {
+          final playActive = _controller.isPressed.value;
+          final voted = _controller.currentSongVoted.value;
+          return GestureDetector(
+            onTap: playActive ? () => _controller.toggleVote() : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: voted
+                  ? const Color(0xFFFFD700).withOpacity(0.2)
+                  : Colors.white.withOpacity(playActive ? 0.08 : 0.03),
+                border: Border.all(
+                  color: voted
+                    ? const Color(0xFFFFD700).withOpacity(0.6)
+                    : Colors.white.withOpacity(playActive ? 0.2 : 0.08),
+                ),
+              ),
+              child: Icon(
+                voted ? Icons.star : Icons.star_border,
+                color: voted
+                  ? const Color(0xFFFFD700)
+                  : (playActive ? Colors.white54 : Colors.white24),
+                size: 22,
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildVolumeRow({double sliderWidth = 220}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.volume_mute, color: Colors.white),
+        Obx(() => SizedBox(
+          width: sliderWidth,
+          child: Slider(
+            min: 0.0, max: 1.0,
+            activeColor: CustomColor.primaryColorOne,
+            inactiveColor: Colors.white.withOpacity(0.3),
+            thumbColor: CustomColor.primaryColor,
+            value: sliderValue.value,
+            onChanged: (value) async {
+              sliderValue.value = value;
+              await _controller.setVolume(value);
+            },
+          ),
+        )),
+        const Icon(Icons.volume_up, color: Colors.white),
+      ],
+    );
+  }
+
+  Widget _buildNowPlayingText({double maxWidth = double.infinity}) {
+    return Column(
+      children: [
+        Obx(() => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            _controller.titleValue.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        )),
+        const SizedBox(height: 5),
+        Obx(() => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            _controller.artistValue.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildShowSection() {
+    return Obx(() {
+      final show = _controller.showName.value;
+      final showImg = _controller.showImage.value;
+      final nextShow = _controller.nextShowName.value;
+      final nextTime = _controller.nextShowTime.value;
+      final numero = _controller.whatsappNumber.value;
+      final studio = _controller.whatsappStudio.value;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            if (show.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(colors: [
+                    const Color(0xFFD85D9D).withOpacity(0.25),
+                    const Color(0xFF4EC8E8).withOpacity(0.12),
+                  ]),
+                  border: Border.all(color: const Color(0xFFD85D9D), width: 1.5),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showImg.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          showImg, width: 60, height: 60, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    if (showImg.isNotEmpty) const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: const Color(0xFFD85D9D), borderRadius: BorderRadius.circular(6)),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.circle, color: Colors.white, size: 8),
+                                    SizedBox(width: 4),
+                                    Text('ORA IN ONDA', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.mic, color: Color(0xFF4EC8E8), size: 16),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(show,
+                            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (numero.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () async {
+                                final url = Uri.parse('https://wa.me/$numero');
+                                if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.platformDefault);
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: const Color(0xFF25D366).withOpacity(0.15),
+                                  border: Border.all(color: const Color(0xFF25D366).withOpacity(0.6)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.chat, color: Color(0xFF25D366), size: 16),
+                                    const SizedBox(width: 6),
+                                    Text('WhatsApp - $studio',
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (nextShow.isNotEmpty) ...[
+              if (show.isNotEmpty) const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF4EC8E8).withOpacity(0.08),
+                  border: Border.all(color: const Color(0xFF4EC8E8).withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule, color: Color(0xFF4EC8E8), size: 16),
+                    const SizedBox(width: 8),
+                    const Text('Prossima diretta: ', style: TextStyle(color: Color(0xFF4EC8E8), fontSize: 12)),
+                    Expanded(
+                      child: Text(
+                        nextTime.isNotEmpty ? '$nextShow alle $nextTime' : nextShow,
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
   }
 
   // ============================================================================
@@ -484,93 +808,109 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       drawer: DrawerScreen(),
       body: Stack(
         children: [
-          _bodyWidget(context),
-          // PREMIO OVERLAY — widget nell'albero, funziona SEMPRE
-          Obx(() {
-            if (!_controller.premioPending.value) return const SizedBox.shrink();
-            return Positioned.fill(
-              child: Container(
-                color: Colors.black.withOpacity(0.7),
-                child: Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 30),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
-                    ),
-                    border: Border.all(color: const Color(0xFFD85D9D), width: 2),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🎉', style: TextStyle(fontSize: 50)),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'HAI VINTO!',
-                        style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _controller.premioMessaggio.value,
-                        style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (_controller.fanCode.value.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color(0xFFD85D9D).withOpacity(0.2),
-                            border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
-                          ),
-                          child: Text(
-                            'Il tuo codice: ${_controller.fanCode.value}',
-                            style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: () => _controller.dismissPremio(),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
-                          ),
-                          child: const Text(
-                            'FANTASTICO!',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ),
-            );
-          }),
+          // ✅ Layout responsivo: portrait vs landscape
+          OrientationBuilder(
+            builder: (context, orientation) {
+              if (orientation == Orientation.landscape) {
+                return _bodyLandscape(context);
+              }
+              return _bodyPortrait(context);
+            },
+          ),
+          // PREMIO OVERLAY — funziona in entrambe le orientazioni
+          _buildPremioOverlay(),
         ],
       ),
     );
   }
 
   // ============================================================================
-  // BODY
+  // PREMIO OVERLAY
+  // ============================================================================
+  Widget _buildPremioOverlay() {
+    return Obx(() {
+      if (!_controller.premioPending.value) return const SizedBox.shrink();
+      return Positioned.fill(
+        child: Container(
+          color: Colors.black.withOpacity(0.7),
+          child: Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 30),
+            padding: const EdgeInsets.all(24),
+            constraints: const BoxConstraints(maxWidth: 400),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+              ),
+              border: Border.all(color: const Color(0xFFD85D9D), width: 2),
+              boxShadow: [
+                BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.4), blurRadius: 30),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🎉', style: TextStyle(fontSize: 50)),
+                const SizedBox(height: 12),
+                const Text(
+                  'HAI VINTO!',
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _controller.premioMessaggio.value,
+                  style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+                  textAlign: TextAlign.center,
+                ),
+                if (_controller.fanCode.value.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFFD85D9D).withOpacity(0.2),
+                      border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
+                    ),
+                    child: Text(
+                      'Il tuo codice: ${_controller.fanCode.value}',
+                      style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => _controller.dismissPremio(),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
+                    ),
+                    child: const Text(
+                      'FANTASTICO!',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ),
+        ),
+      );
+    });
+  }
+
+  // ============================================================================
+  // BODY PORTRAIT — layout originale
   // ============================================================================
 
-  Widget _bodyWidget(BuildContext context) {
+  Widget _bodyPortrait(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -582,284 +922,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _upperContainer(context),
+            _upperContainerPortrait(context),
             addVerticalSpace(6),
-
-            // ===================== FAN CODE (sopra il play) =====================
-            Obx(() {
-              if (_controller.fanCode.value.isEmpty) return const SizedBox.shrink();
-              return GestureDetector(
-                onTap: () => _showFanProfileDialog(),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFFD85D9D).withOpacity(0.1),
-                    border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.person, color: Color(0xFFD85D9D), size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        _controller.fanNome.value.isNotEmpty
-                          ? '${_controller.fanNome.value} • ${_controller.fanCode.value}'
-                          : _controller.fanCode.value,
-                        style: const TextStyle(color: Color(0xFFD85D9D), fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                      if (_controller.fanTotalVotes.value > 0) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          '⭐${_controller.fanTotalVotes.value}',
-                          style: TextStyle(color: const Color(0xFFFFD700).withOpacity(0.8), fontSize: 12),
-                        ),
-                      ],
-                      const SizedBox(width: 4),
-                      Icon(Icons.edit, color: const Color(0xFFD85D9D).withOpacity(0.5), size: 12),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-            // =================== CONTROLS ROW ===================
-            // [🌙 Sleep] [❤️ Cuore] [▶️ Play] [⭐ Voto] 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Sleep Timer
-                GestureDetector(
-                  onTap: () => _showSleepTimerDialog(),
-                  child: Obx(() => Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _controller.sleepTimerMinutes.value > 0
-                        ? const Color(0xFF4EC8E8).withOpacity(0.2)
-                        : Colors.white.withOpacity(0.08),
-                      border: Border.all(
-                        color: _controller.sleepTimerMinutes.value > 0
-                          ? const Color(0xFF4EC8E8).withOpacity(0.6)
-                          : Colors.white.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.bedtime,
-                      color: _controller.sleepTimerMinutes.value > 0
-                        ? const Color(0xFF4EC8E8)
-                        : Colors.white54,
-                      size: 22,
-                    ),
-                  )),
-                ),
-
-                const SizedBox(width: 20),
-
-                // ▶️ PLAY BUTTON
-                Obx(() => GestureDetector(
-                  onTap: () {
-                    if (_controller.isPressed.value) {
-                      _controller.stopStream();
-                    } else {
-                      _controller.playStream();
-                    }
-                  },
-                  child: Container(
-                    width: 70.w,
-                    height: 70.h,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]),
-                      boxShadow: [BoxShadow(color: const Color(0xFFD85D9D).withOpacity(0.5), blurRadius: 20, spreadRadius: 2)],
-                    ),
-                    child: Icon(
-                      _controller.isPressed.value ? Icons.stop : Icons.play_arrow,
-                      color: Colors.white, size: 40,
-                    ),
-                  ),
-                )),
-
-                const SizedBox(width: 20),
-
-                // ⭐ STELLA — voto chart, solo con play attivo
-                Obx(() {
-                  final playActive = _controller.isPressed.value;
-                  final voted = _controller.currentSongVoted.value;
-                  return GestureDetector(
-                    onTap: playActive ? () => _controller.toggleVote() : null,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: voted
-                          ? const Color(0xFFFFD700).withOpacity(0.2)
-                          : Colors.white.withOpacity(playActive ? 0.08 : 0.03),
-                        border: Border.all(
-                          color: voted
-                            ? const Color(0xFFFFD700).withOpacity(0.6)
-                            : Colors.white.withOpacity(playActive ? 0.2 : 0.08),
-                        ),
-                      ),
-                      child: Icon(
-                        voted ? Icons.star : Icons.star_border,
-                        color: voted
-                          ? const Color(0xFFFFD700)
-                          : (playActive ? Colors.white54 : Colors.white24),
-                        size: 22,
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-
+            _buildFanCodeBadge(),
+            _buildControlsRow(playSize: 70),
             addVerticalSpace(12),
-
-            // RDS MESSAGGI
             _buildRdsSection(),
-
-            // SHOW IN ONDA o PROSSIMA DIRETTA
-            Obx(() {
-              final show = _controller.showName.value;
-              final showImg = _controller.showImage.value;
-              final nextShow = _controller.nextShowName.value;
-              final nextTime = _controller.nextShowTime.value;
-              final numero = _controller.whatsappNumber.value;
-              final studio = _controller.whatsappStudio.value;
-
-              return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  children: [
-                    if (show.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          gradient: LinearGradient(colors: [
-                            const Color(0xFFD85D9D).withOpacity(0.25),
-                            const Color(0xFF4EC8E8).withOpacity(0.12),
-                          ]),
-                          border: Border.all(color: const Color(0xFFD85D9D), width: 1.5),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (showImg.isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  showImg, width: 60, height: 60, fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                                ),
-                              ),
-                            if (showImg.isNotEmpty) const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(color: const Color(0xFFD85D9D), borderRadius: BorderRadius.circular(6)),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.circle, color: Colors.white, size: 8),
-                                            SizedBox(width: 4),
-                                            Text('ORA IN ONDA', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Icon(Icons.mic, color: Color(0xFF4EC8E8), size: 16),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(show,
-                                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (numero.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        final url = Uri.parse('https://wa.me/$numero');
-                                        if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.platformDefault);
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(8),
-                                          color: const Color(0xFF25D366).withOpacity(0.15),
-                                          border: Border.all(color: const Color(0xFF25D366).withOpacity(0.6)),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(Icons.chat, color: Color(0xFF25D366), size: 16),
-                                            const SizedBox(width: 6),
-                                            Text('WhatsApp - $studio',
-                                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    if (nextShow.isNotEmpty) ...[
-                      if (show.isNotEmpty) const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: const Color(0xFF4EC8E8).withOpacity(0.08),
-                          border: Border.all(color: const Color(0xFF4EC8E8).withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.schedule, color: Color(0xFF4EC8E8), size: 16),
-                            const SizedBox(width: 8),
-                            const Text('Prossima diretta: ', style: TextStyle(color: Color(0xFF4EC8E8), fontSize: 12)),
-                            Expanded(
-                              child: Text(
-                                nextTime.isNotEmpty ? '$nextShow alle $nextTime' : nextShow,
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-
-            addVerticalSpace(20.h),
+            _buildShowSection(),
+            addVerticalSpace(20),
             const NetworkWidget(),
-            addVerticalSpace(20.h),
+            addVerticalSpace(20),
           ],
         ),
       ),
     );
   }
 
-  Container _upperContainer(BuildContext context) {
+  Widget _upperContainerPortrait(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: Dimensions.marginSize, horizontal: Dimensions.defaultPaddingSize),
       child: GlassmorphicContainer(
@@ -902,54 +981,114 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 return _buildCopertina(isShimmer: false);
               }),
               addVerticalSpace(15),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.volume_mute, color: Colors.white),
-                  Obx(() => SizedBox(
-                    width: 220.w,
-                    child: Slider(
-                      min: 0.0, max: 1.0,
-                      activeColor: CustomColor.primaryColorOne,
-                      inactiveColor: Colors.white.withOpacity(0.3),
-                      thumbColor: CustomColor.primaryColor,
-                      value: sliderValue.value,
-                      onChanged: (value) async {
-                        sliderValue.value = value;
-                        await _controller.setVolume(value);
-                      },
-                    ),
-                  )),
-                  const Icon(Icons.volume_up, color: Colors.white),
-                ],
-              ),
-
-              Obx(() => Padding(
-                padding: EdgeInsets.symmetric(horizontal: Dimensions.defaultPaddingSize * 0.4),
-                child: Text(
-                  _controller.titleValue.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              )),
-              addVerticalSpace(5),
-
-              Obx(() => Padding(
-                padding: EdgeInsets.symmetric(horizontal: Dimensions.defaultPaddingSize * 0.4),
-                child: Text(
-                  _controller.artistValue.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 15),
-                  textAlign: TextAlign.center,
-                ),
-              )),
+              _buildVolumeRow(sliderWidth: 220),
+              _buildNowPlayingText(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // BODY LANDSCAPE — layout a due colonne
+  // ============================================================================
+
+  Widget _bodyLandscape(BuildContext context) {
+    final screenH = MediaQuery.of(context).size.height;
+    final screenW = MediaQuery.of(context).size.width;
+    // Artwork size: 60% dell'altezza disponibile (meno appbar ~56px)
+    final artSize = ((screenH - 56) * 0.55).clamp(120.0, 300.0);
+    // Volume slider: proporzionale alla colonna
+    final sliderW = (screenW * 0.2).clamp(120.0, 250.0);
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1A0A10), Color(0xFF000000), Color(0xFF0A0A1A)],
+        ),
+      ),
+      child: Row(
+        children: [
+          // ===== COLONNA SINISTRA: Artwork + Titolo + Volume =====
+          Expanded(
+            flex: 5,
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Artwork con glassmorphic border
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFFD85D9D).withOpacity(0.1),
+                            const Color(0xFF4EC8E8).withOpacity(0.05),
+                          ],
+                        ),
+                        border: Border.all(
+                          width: 1.5,
+                          color: const Color(0xFFD85D9D).withOpacity(0.4),
+                        ),
+                      ),
+                      child: Obx(() {
+                        final isShimmer = _controller.artworkShimmer.value;
+                        if (isShimmer) {
+                          return AnimatedBuilder(
+                            animation: _shimmerAnim,
+                            builder: (_, __) {
+                              final t = ((_shimmerAnim.value + 1) / 2).clamp(0.0, 1.0);
+                              final scale = 1.0 + 0.06 * (t < 0.5 ? t * 2 : (1 - t) * 2);
+                              return Transform.scale(
+                                scale: scale,
+                                child: _buildCopertina(isShimmer: true, size: artSize),
+                              );
+                            },
+                          );
+                        }
+                        return _buildCopertina(isShimmer: false, size: artSize);
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildNowPlayingText(),
+                    const SizedBox(height: 8),
+                    _buildVolumeRow(sliderWidth: sliderW),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ===== COLONNA DESTRA: Controlli + Info (scrollabile) =====
+          Expanded(
+            flex: 5,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                children: [
+                  _buildFanCodeBadge(),
+                  const SizedBox(height: 8),
+                  _buildControlsRow(playSize: 60),
+                  const SizedBox(height: 12),
+                  _buildRdsSection(),
+                  _buildShowSection(),
+                  const SizedBox(height: 16),
+                  const NetworkWidget(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1029,18 +1168,21 @@ class _MarqueeTextState extends State<_MarqueeText> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 20,
-      child: ListView(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(widget.text, style: widget.style),
-          ),
-        ],
+    // ✅ ClipRect evita overflow visivo del testo in landscape
+    return ClipRect(
+      child: SizedBox(
+        height: 20,
+        child: ListView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(widget.text, style: widget.style),
+            ),
+          ],
+        ),
       ),
     );
   }

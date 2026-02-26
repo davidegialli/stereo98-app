@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,10 +17,10 @@ class NetworkWidget extends StatelessWidget {
           },
           child: Image.asset(
             "assets/images/facebook.png",
-            height: 50.h,
+            height: 50,
           ),
         ),
-        addHorizontalSpace(22.3.w),
+        addHorizontalSpace(22),
         GestureDetector(
           onTap: () {
             // ignore: deprecated_member_use
@@ -29,10 +28,10 @@ class NetworkWidget extends StatelessWidget {
           },
           child: Image.asset(
             "assets/images/instagram.png",
-            height: 50.h,
+            height: 50,
           ),
         ),
-        addHorizontalSpace(22.8.w),
+        addHorizontalSpace(22),
         GestureDetector(
           onTap: () {
             // ignore: deprecated_member_use
@@ -40,7 +39,7 @@ class NetworkWidget extends StatelessWidget {
           },
           child: Image.asset(
             "assets/images/twitter.png",
-            height: 50.h,
+            height: 50,
           ),
         ),
       ],

@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -79,12 +78,12 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         ),
         child: Column(
           children: [
-            // 🔥 Giorni della settimana
+            // 🔥 Giorni della settimana — dimensioni fisse, funziona in entrambe le orientazioni
             SizedBox(
-              height: 52.h,
+              height: 52,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 itemCount: _giorni.length,
                 itemBuilder: (context, i) {
                   final isSelected = _selectedDay == i;
@@ -93,8 +92,8 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                     onTap: () => setState(() => _selectedDay = i),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      margin: EdgeInsets.only(right: 8.w),
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         gradient: isSelected ? const LinearGradient(
@@ -145,7 +144,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
       return const Center(child: Text('Nessuno show programmato', style: TextStyle(color: Colors.white)));
     }
     return ListView.builder(
-      padding: EdgeInsets.all(12.w),
+      padding: const EdgeInsets.all(12),
       itemCount: shows.length,
       itemBuilder: (context, i) {
         final show = shows[i];
@@ -156,7 +155,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         final isLive = _isLive(start, end) && DateTime.now().weekday - 1 == _selectedDay;
 
         return Container(
-          margin: EdgeInsets.only(bottom: 10.h),
+          margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
@@ -170,11 +169,11 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
             ),
           ),
           child: ListTile(
-            contentPadding: EdgeInsets.all(10.w),
+            contentPadding: const EdgeInsets.all(10),
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: image.isNotEmpty
-                  ? Image.network(image, width: 55.w, height: 55.h, fit: BoxFit.cover,
+                  ? Image.network(image, width: 55, height: 55, fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _placeholder())
                   : _placeholder(),
             ),
@@ -210,7 +209,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
 
   Widget _placeholder() {
     return Container(
-      width: 55.w, height: 55.h,
+      width: 55, height: 55,
       decoration: BoxDecoration(
         color: const Color(0xFFD85D9D).withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),

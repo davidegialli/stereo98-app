@@ -21,9 +21,12 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Rotazione libera — tutte le orientazioni supportate
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

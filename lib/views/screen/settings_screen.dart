@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:stereo98/controller/language_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
@@ -55,9 +54,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: ListView(
           children: [
-            addVerticalSpace(17.8.h),
+            addVerticalSpace(18),
             Padding(
-              padding: EdgeInsets.only(left: 18.8.w, right: 24.w),
+              padding: const EdgeInsets.only(left: 20, right: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -105,41 +104,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            addVerticalSpace(11.2.h),
+            addVerticalSpace(12),
             Obx(
               () => SizedBox(
-                height: 50.h,
+                height: 50,
                 width: double.infinity,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 18.8.w),
+                      padding: const EdgeInsets.only(left: 20),
                       child: Text(
                         Strings.changeLanguage.tr,
                         style: CustomStyler.settingsScreenDropDownTextStyle,
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(right: 34.8.w),
+                      padding: const EdgeInsets.only(right: 34),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton2(
                           alignment: Alignment.topRight,
                           hint: const Center(child: Text("")),
-                          // dropdownWidth: 167.w,
                           value: languageController.locale.value,
-                          // dropdownDecoration: BoxDecoration(
-                          //   borderRadius:
-                          //       BorderRadius.circular(Dimensions.radius),
-                          //   color: Get.isDarkMode
-                          //       ? Colors.black.withValues(alpha:0.7)
-                          //       : CustomColor.primaryColor.withValues(alpha:0.7),
-                          // ),
-                          // icon: const Icon(
-                          //   Icons.arrow_drop_down,
-                          //   color: Colors.white,
-                          //   size: 35,
-                          // ),
                           items: languageController.optionsLocales.entries.map((
                             item,
                           ) {

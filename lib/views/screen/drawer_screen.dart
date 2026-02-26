@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:stereo98/routes/routes.dart';
 import 'package:stereo98/utils/custom_color.dart';
@@ -28,7 +27,7 @@ class DrawerScreen extends StatelessWidget {
       textAlign: TextAlign.center,
       style: TextStyle(fontSize: 15),
     ),
-    image: Image.asset(Strings.splashLogo, height: 150.h),
+    image: Image.asset(Strings.splashLogo, height: 150),
     submitButtonText: 'Invia',
     onCancelled: () {},
     onSubmitted: (response) {
@@ -45,13 +44,13 @@ class DrawerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Theme.of(context).canvasColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topRight: Radius.circular(30.r)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topRight: Radius.circular(30)),
       ),
       child: ListView(
         children: [
           _headerDrawer(context),
-          Divider(height: 2.h, color: CustomColor.whiteColor.withOpacity(0.5)),
+          Divider(height: 2, color: CustomColor.whiteColor.withOpacity(0.5)),
           _listWidget(context),
         ],
       ),

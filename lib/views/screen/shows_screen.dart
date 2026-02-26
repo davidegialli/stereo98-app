@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -64,104 +63,110 @@ class _ShowsScreenState extends State<ShowsScreen> {
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
             : _shows.isEmpty
                 ? const Center(child: Text('Nessuno show disponibile', style: TextStyle(color: Colors.white)))
-                : GridView.builder(
-                    padding: EdgeInsets.all(12.w),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12.w,
-                      mainAxisSpacing: 12.h,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: _shows.length,
-                    itemBuilder: (context, i) {
-                      final show = _shows[i];
-                      final nome = _fixText(show['nome'] ?? '');
-                      final image = show['immagine'] ?? '';
-                      final conduttore = _fixText(show['conduttore'] ?? '');
-                      final palinsesto = show['palinsesto'] ?? '';
+                : OrientationBuilder(
+                    builder: (context, orientation) {
+                      // ✅ Più colonne in landscape per sfruttare lo spazio
+                      final crossAxisCount = orientation == Orientation.landscape ? 4 : 2;
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(12),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.8,
+                        ),
+                        itemCount: _shows.length,
+                        itemBuilder: (context, i) {
+                          final show = _shows[i];
+                          final nome = _fixText(show['nome'] ?? '');
+                          final image = show['immagine'] ?? '';
+                          final conduttore = _fixText(show['conduttore'] ?? '');
+                          final palinsesto = show['palinsesto'] ?? '';
 
-                      return GestureDetector(
-                        onTap: () => _showDetail(context, show),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                const Color(0xFFD85D9D).withOpacity(0.15),
-                                const Color(0xFF4EC8E8).withOpacity(0.05),
-                              ],
-                            ),
-                            border: Border.all(
-                              color: const Color(0xFFD85D9D).withOpacity(0.3),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Immagine show
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                  child: image.isNotEmpty
-                                      ? Image.network(
-                                          image,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => _placeholder(),
-                                        )
-                                      : _placeholder(),
-                                ),
-                              ),
-                              // Info show
-                              Padding(
-                                padding: EdgeInsets.all(8.w),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      nome,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (conduttore.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        conduttore,
-                                        style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 11),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                    if (palinsesto.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.schedule, color: Color(0xFFD85D9D), size: 10),
-                                          const SizedBox(width: 3),
-                                          Expanded(
-                                            child: Text(
-                                              palinsesto,
-                                              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                          return GestureDetector(
+                            onTap: () => _showDetail(context, show),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(0xFFD85D9D).withOpacity(0.15),
+                                    const Color(0xFF4EC8E8).withOpacity(0.05),
                                   ],
                                 ),
+                                border: Border.all(
+                                  color: const Color(0xFFD85D9D).withOpacity(0.3),
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Immagine show
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                      child: image.isNotEmpty
+                                          ? Image.network(
+                                              image,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => _placeholder(),
+                                            )
+                                          : _placeholder(),
+                                    ),
+                                  ),
+                                  // Info show
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          nome,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (conduttore.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            conduttore,
+                                            style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 11),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                        if (palinsesto.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.schedule, color: Color(0xFFD85D9D), size: 10),
+                                              const SizedBox(width: 3),
+                                              Expanded(
+                                                child: Text(
+                                                  palinsesto,
+                                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -176,12 +181,18 @@ class _ShowsScreenState extends State<ShowsScreen> {
     final descrizione = _fixText(show['descrizione_breve'] ?? show['descrizione'] ?? '');
     final palinsesto = show['palinsesto'] ?? '';
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
+        // ✅ In landscape: quasi full screen per avere abbastanza spazio
+        height: isLandscape
+            ? MediaQuery.of(context).size.height * 0.85
+            : MediaQuery.of(context).size.height * 0.7,
+        constraints: const BoxConstraints(maxWidth: 600),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -207,20 +218,22 @@ class _ShowsScreenState extends State<ShowsScreen> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20.w),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (image.isNotEmpty)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.network(image, height: 180.h, fit: BoxFit.cover,
+                        child: Image.network(image,
+                          height: isLandscape ? 140 : 180,
+                          fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const SizedBox.shrink()),
                       ),
-                    SizedBox(height: 16.h),
+                    const SizedBox(height: 16),
                     Text(nome, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                     if (conduttore.isNotEmpty) ...[
-                      SizedBox(height: 8.h),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -231,7 +244,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
                       ),
                     ],
                     if (palinsesto.isNotEmpty) ...[
-                      SizedBox(height: 8.h),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -250,7 +263,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
                       ),
                     ],
                     if (descrizione.isNotEmpty) ...[
-                      SizedBox(height: 16.h),
+                      const SizedBox(height: 16),
                       Text(descrizione, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, height: 1.5), textAlign: TextAlign.center),
                     ],
                   ],

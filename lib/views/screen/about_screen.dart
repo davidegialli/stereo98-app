@@ -1,9 +1,7 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:stereo98/utils/custom_color.dart';
-import 'package:stereo98/utils/dimsensions.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
 
@@ -12,6 +10,9 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Logo responsivo: quadrato, basato sul lato più corto
+    final logoSize = (MediaQuery.of(context).size.shortestSide * 0.35).clamp(100.0, 160.0);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -36,9 +37,9 @@ class AboutScreen extends StatelessWidget {
           ),
         ),
         child: ListView(
-          padding: EdgeInsets.all(Dimensions.defaultPaddingSize),
+          padding: const EdgeInsets.all(24),
           children: [
-            addVerticalSpace(20.h),
+            addVerticalSpace(20),
             Center(
               child: Container(
                 decoration: BoxDecoration(
@@ -55,14 +56,14 @@ class AboutScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
                     'assets/images/logo.png',
-                    width: 160.w,
-                    height: 160.h,
+                    width: logoSize,
+                    height: logoSize,
                     fit: BoxFit.cover,
                   ),
                 ),
               ),
             ),
-            addVerticalSpace(24.h),
+            addVerticalSpace(24),
             const Center(
               child: Text(
                 'Stereo 98 DAB+',
@@ -73,7 +74,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            addVerticalSpace(6.h),
+            addVerticalSpace(6),
             Center(
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
@@ -89,7 +90,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            addVerticalSpace(30.h),
+            addVerticalSpace(30),
             Container(
               height: 1,
               decoration: const BoxDecoration(
@@ -98,7 +99,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            addVerticalSpace(24.h),
+            addVerticalSpace(24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -119,13 +120,13 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            addVerticalSpace(24.h),
+            addVerticalSpace(24),
             _infoRow(Icons.radio, 'Frequenza', 'DAB+ Digitale Terrestre'),
-            addVerticalSpace(10.h),
+            addVerticalSpace(10),
             _infoRow(Icons.wifi, 'Streaming', 'stereo98.com'),
-            addVerticalSpace(10.h),
+            addVerticalSpace(10),
             _infoRow(Icons.location_on, 'Studi', 'Veneto • Piemonte • Lazio'),
-            addVerticalSpace(40.h),
+            addVerticalSpace(40),
             Center(
               child: Text(
                 'Versione 1.1.0',
@@ -135,7 +136,7 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            addVerticalSpace(20.h),
+            addVerticalSpace(20),
           ],
         ),
       ),
