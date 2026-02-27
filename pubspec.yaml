@@ -3,7 +3,7 @@ description: Stereo 98 DAB+ Radio Streaming
 
 publish_to: 'none'
 
-version: 1.1.0+16
+version: 1.1.0+17
 
 environment:
   sdk: ">=3.5.0 <4.4.0"
@@ -34,6 +34,8 @@ dependencies:
   connectivity_plus: ^7.0.0
   dropdown_button2: ^2.3.9
   flutter_inappwebview: ^6.1.5
+  share_plus: ^10.1.4
+  package_info_plus: ^8.1.3
 
 dev_dependencies:
   flutter_test:

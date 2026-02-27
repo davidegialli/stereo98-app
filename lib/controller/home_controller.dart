@@ -68,12 +68,30 @@ class HomeController extends GetxController {
   // Chart
   var chart = <Map<String, dynamic>>[].obs;
 
+  // 📻 Cronologia brani ascoltati
+  var cronologia = <Map<String, String>>[].obs;
+
   bool _isStartingPlay = false;
   int _artworkTs = 0;
   late String _deviceId;
   late GetStorage _box;
 
   static const String streamUrl = 'https://c40.radioboss.fm:8083/stream';
+  static const String stream256Url = 'https://c40.radioboss.fm:8083/stream256';
+  static const String stream128Url = 'https://c40.radioboss.fm:8083/stream128';
+
+  static const Map<String, String> streamQualities = {
+    '320': 'https://c40.radioboss.fm:8083/stream',
+    '256': 'https://c40.radioboss.fm:8083/stream256',
+    '128': 'https://c40.radioboss.fm:8083/stream128',
+  };
+
+  String get activeStreamUrl {
+    final quality = _box.read('stereo98_stream_quality') ?? '320';
+    return streamQualities[quality] ?? streamUrl;
+  }
+
+  var streamQuality = '320'.obs;
   static const String radiobossStatusUrl = 'https://c40.radioboss.fm:8083/status-json.xsl';
   static const String radiobossArtworkUrl = 'https://c40.radioboss.fm/w/artwork/83.jpg';
   static const String palinsestoUrl = 'https://stereo98.com/wp-json/stereo98/v1/palinsesto';
@@ -97,6 +115,8 @@ class HomeController extends GetxController {
 
     _initDeviceId();
     _loadLocalFavorites();
+    _loadCronologia();
+    streamQuality.value = _box.read('stereo98_stream_quality') ?? '320';
 
     getNowPlaying();
     getPalinsesto();
@@ -239,6 +259,25 @@ class HomeController extends GetxController {
 
   void cancelSleepTimer() => setSleepTimer(0);
 
+  // ==========================================================================
+  // 🎧 QUALITÀ STREAMING
+  // ==========================================================================
+  Future<void> setStreamQuality(String quality) async {
+    streamQuality.value = quality;
+    _box.write('stereo98_stream_quality', quality);
+
+    // Se sta riproducendo, riavvia con la nuova qualità
+    if (isPressed.value) {
+      try {
+        await player.setUrl(activeStreamUrl);
+        await _audioHandler.play();
+        if (kDebugMode) print('[Stereo98] Switched to ${quality}kbps: $activeStreamUrl');
+      } catch (e) {
+        if (kDebugMode) print('[Stereo98] Quality switch error: $e');
+      }
+    }
+  }
+
   String get sleepTimerFormatted {
     final secs = sleepTimerRemaining.value;
     if (secs <= 0) return '';
@@ -297,6 +336,49 @@ class HomeController extends GetxController {
 
   String _branoKey(String artista, String titolo) {
     return '${artista.toLowerCase().trim()}|${titolo.toLowerCase().trim()}';
+  }
+
+  // ==========================================================================
+  // 📻 CRONOLOGIA BRANI ASCOLTATI
+  // ==========================================================================
+  void _loadCronologia() {
+    final stored = _box.read<List>('stereo98_cronologia');
+    if (stored != null) {
+      cronologia.value = stored
+          .map((e) => Map<String, String>.from(e as Map))
+          .toList();
+    }
+  }
+
+  void _saveToCronologia(String artista, String titolo) {
+    if (artista.isEmpty && titolo.isEmpty) return;
+
+    // Evita duplicati consecutivi
+    if (cronologia.isNotEmpty) {
+      final last = cronologia.first;
+      if (last['artista'] == artista && last['titolo'] == titolo) return;
+    }
+
+    final now = DateTime.now();
+    final ora = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    cronologia.insert(0, {
+      'artista': artista,
+      'titolo': titolo,
+      'ora': ora,
+    });
+
+    // Mantieni max 50 brani
+    if (cronologia.length > 50) {
+      cronologia.removeRange(50, cronologia.length);
+    }
+
+    _box.write('stereo98_cronologia', cronologia.toList());
+  }
+
+  void clearCronologia() {
+    cronologia.clear();
+    _box.remove('stereo98_cronologia');
   }
 
   // ==========================================================================
@@ -501,8 +583,8 @@ class HomeController extends GetxController {
   // ==========================================================================
   Future<void> _initPlayer() async {
     try {
-      await player.setUrl(streamUrl);
-      if (kDebugMode) print('[Stereo98] Player source ready');
+      await player.setUrl(activeStreamUrl);
+      if (kDebugMode) print('[Stereo98] Player source ready (${streamQuality.value}kbps)');
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Error setting audio source: $e');
     }
@@ -527,7 +609,7 @@ class HomeController extends GetxController {
     update();
 
     try {
-      await player.setUrl(streamUrl);
+      await player.setUrl(activeStreamUrl);
       await _audioHandler.play();
     } catch (e) {
       if (kDebugMode) print('[Stereo98] Play error: $e');
@@ -557,7 +639,7 @@ class HomeController extends GetxController {
   Future<void> _reconnectStream() async {
     await Future.delayed(const Duration(seconds: 3));
     try {
-      await player.setUrl(streamUrl);
+      await player.setUrl(activeStreamUrl);
       if (isPressed.value) {
         await _audioHandler.play();
       }
@@ -624,6 +706,9 @@ class HomeController extends GetxController {
 
           titleValue.value = newTitle;
           artistValue.value = newArtist;
+
+          // 📻 Salva in cronologia
+          _saveToCronologia(newArtist, newTitle);
 
           _updateNotification();
           _checkIfCurrentSongFavorited();

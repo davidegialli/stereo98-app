@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:stereo98/bindings/home_binding.dart';
 import 'package:stereo98/controller/splash_controller.dart';
 import 'package:stereo98/views/screen/about_screen.dart';
+import 'package:stereo98/views/screen/cronologia_screen.dart';
 import 'package:stereo98/views/screen/home_screen.dart';
 import 'package:stereo98/views/screen/settings_screen.dart';
 import 'package:stereo98/views/screen/splash_screen.dart';
@@ -23,6 +24,7 @@ class Routes {
   static const String sondaggiScreen = '/sondaggiScreen';
   static const String scriviciScreen = '/scriviciScreen';
   static const String istruzioniScreen = '/istruzioniScreen';
+  static const String cronologiaScreen = '/cronologiaScreen';
 
   static var list = [
     GetPage(
@@ -43,5 +45,6 @@ class Routes {
     GetPage(name: sondaggiScreen, page: () => const SondaggiScreen()),
     GetPage(name: scriviciScreen, page: () => const ScriviciScreen()),
     GetPage(name: istruzioniScreen, page: () => const IstruzioniScreen()),
+    GetPage(name: cronologiaScreen, page: () => const CronologiaScreen()),
   ];
 }

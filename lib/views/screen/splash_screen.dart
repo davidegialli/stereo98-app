@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/strings.dart';
 
@@ -13,37 +14,33 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
 
-  // 1) Logo entra: scale da piccolo a grande con overshoot
+  String _versionText = '';
+
   late AnimationController _enterController;
   late Animation<double> _enterScale;
   late Animation<double> _enterFade;
 
-  // 2) Dopo l'entrata: respiro continuo (pulse lento)
   late AnimationController _breatheController;
   late Animation<double> _breatheScale;
 
-  // 3) Anello di luce che si espande
   late AnimationController _ringController;
   late Animation<double> _ringScale;
   late Animation<double> _ringFade;
 
-  // 4) Glow pulsante (colori brand)
   late AnimationController _glowController;
   late Animation<double> _glowIntensity;
 
-  // 5) Spinner
   late AnimationController _spinnerController;
   late Animation<double> _spinnerFade;
 
-  // 6) Versione
   late AnimationController _versionController;
   late Animation<double> _versionFade;
 
   @override
   void initState() {
     super.initState();
+    _loadVersion();
 
-    // 1) ENTRATA — 1 secondo, scale 0.3 → 1.05 → 1.0 (overshoot)
     _enterController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -57,7 +54,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _enterController, curve: const Interval(0, 0.4, curve: Curves.easeOut)),
     );
 
-    // 2) RESPIRO — loop, scale 1.0 → 1.06 → 1.0
     _breatheController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -66,7 +62,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _breatheController, curve: Curves.easeInOut),
     );
 
-    // 3) ANELLO — espande da 1x a 3x e sparisce
     _ringController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -78,7 +73,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _ringController, curve: Curves.easeIn),
     );
 
-    // 4) GLOW — pulsante forte
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -87,7 +81,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
 
-    // 5) SPINNER
     _spinnerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -96,7 +89,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _spinnerController, curve: Curves.easeIn),
     );
 
-    // 6) VERSIONE
     _versionController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -108,26 +100,32 @@ class _SplashScreenState extends State<SplashScreen>
     _startSequence();
   }
 
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _versionText = 'v${info.version}');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _versionText = Strings.version);
+    }
+  }
+
   void _startSequence() async {
-    // Breve pausa iniziale
     await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
 
-    // Logo entra con scale grande
     _enterController.forward();
 
-    // A metà dell'entrata, lancia l'anello di luce
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     _ringController.forward();
     _glowController.repeat(reverse: true);
 
-    // Entrata finita → inizia il respiro
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     _breatheController.repeat(reverse: true);
 
-    // Spinner
     _spinnerController.forward();
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -168,11 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(height: 80),
-
-            // ===== LOGO + ANELLO + GLOW =====
             _buildAnimatedLogo(),
-
-            // ===== SPINNER + VERSIONE =====
             Padding(
               padding: const EdgeInsets.only(bottom: 40),
               child: Column(
@@ -193,9 +187,9 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 16),
                   FadeTransition(
                     opacity: _versionFade,
-                    child: const Text(
-                      Strings.version,
-                      style: TextStyle(
+                    child: Text(
+                      _versionText.isNotEmpty ? _versionText : Strings.version,
+                      style: const TextStyle(
                         color: Colors.white38,
                         fontSize: 11,
                         letterSpacing: 0.5,
@@ -222,7 +216,6 @@ class _SplashScreenState extends State<SplashScreen>
         _ringController, _glowController,
       ]),
       builder: (context, child) {
-        // Combina scale: entrata + respiro
         final enterDone = _enterController.isCompleted;
         final scale = enterDone
             ? _breatheScale.value
@@ -237,7 +230,6 @@ class _SplashScreenState extends State<SplashScreen>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // --- ANELLO DI LUCE che si espande ---
               if (_ringController.isAnimating || _ringController.value > 0)
                 Transform.scale(
                   scale: _ringScale.value,
@@ -254,7 +246,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
 
-              // --- GLOW DIFFUSO ---
               Opacity(
                 opacity: opacity,
                 child: Container(
@@ -278,7 +269,6 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
 
-              // --- LOGO ---
               Opacity(
                 opacity: opacity,
                 child: Transform.scale(

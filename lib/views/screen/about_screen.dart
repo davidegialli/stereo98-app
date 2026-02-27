@@ -1,16 +1,34 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
 
   @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() => _version = 'Versione ${info.version} (${info.buildNumber})');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // ✅ Logo responsivo: quadrato, basato sul lato più corto
     final logoSize = (MediaQuery.of(context).size.shortestSide * 0.35).clamp(100.0, 160.0);
 
     return Scaffold(
@@ -126,10 +144,12 @@ class AboutScreen extends StatelessWidget {
             _infoRow(Icons.wifi, 'Streaming', 'stereo98.com'),
             addVerticalSpace(10),
             _infoRow(Icons.location_on, 'Studi', 'Veneto • Piemonte • Lazio'),
+            addVerticalSpace(10),
+            _infoRow(Icons.music_note, 'Licenza SIAE', 'n. 202500000803'),
             addVerticalSpace(40),
             Center(
               child: Text(
-                'Versione 1.1.0',
+                _version.isNotEmpty ? _version : 'Versione 1.1.0',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.3),
                   fontSize: 12,
@@ -157,7 +177,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Text(label, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 13)),
           const Spacer(),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          Flexible(
+            child: Text(value,
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

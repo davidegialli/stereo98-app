@@ -98,6 +98,11 @@ class DrawerScreen extends StatelessWidget {
           onPressed: () => Get.toNamed(Routes.podcastScreen),
         ),
         MenuItemWidget(
+          screenName: 'Hai ascoltato',
+          icon: Icons.history,
+          onPressed: () => Get.toNamed(Routes.cronologiaScreen),
+        ),
+        MenuItemWidget(
           screenName: 'Sondaggi',
           icon: Icons.poll,
           onPressed: () => Get.toNamed(Routes.sondaggiScreen),

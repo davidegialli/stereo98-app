@@ -2,6 +2,8 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:stereo98/controller/home_controller.dart';
 import 'package:stereo98/controller/language_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/custom_style.dart';
@@ -18,8 +20,31 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final languageController = Get.put(LanguageController());
+  final _box = GetStorage();
 
+  // 0=light, 1=dark, 2=auto
   int dropdownValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    dropdownValue = _box.read('stereo98_theme_mode') ?? 0;
+  }
+
+  void _applyTheme(int themeId) {
+    _box.write('stereo98_theme_mode', themeId);
+    setState(() => dropdownValue = themeId);
+
+    if (themeId == AppThemes.auto) {
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final effectiveTheme = brightness == Brightness.dark
+          ? AppThemes.dark
+          : AppThemes.light;
+      DynamicTheme.of(context)!.setTheme(effectiveTheme);
+    } else {
+      DynamicTheme.of(context)!.setTheme(themeId);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           children: [
             addVerticalSpace(18),
+            // === TEMA ===
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 24),
               child: Row(
@@ -91,12 +117,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   CustomStyler.settingsScreenDropDownTextStyle,
                             ),
                           ),
+                          DropdownMenuItem(
+                            value: AppThemes.auto,
+                            child: Text(
+                              AppThemes.toStr(AppThemes.auto),
+                              style:
+                                  CustomStyler.settingsScreenDropDownTextStyle,
+                            ),
+                          ),
                         ],
-                        onChanged: (dynamic themeId) async {
-                          await DynamicTheme.of(context)!.setTheme(themeId);
-                          setState(() {
-                            dropdownValue = themeId;
-                          });
+                        onChanged: (dynamic themeId) {
+                          _applyTheme(themeId);
                         },
                       ),
                     ),
@@ -105,6 +136,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             addVerticalSpace(12),
+            // === QUALITÀ STREAMING ===
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Qualità streaming',
+                    style: CustomStyler.settingsScreenTextStyle,
+                  ),
+                  Obx(() {
+                    final controller = Get.find<HomeController>();
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownButton<String>(
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white,
+                          size: 35,
+                        ),
+                        value: controller.streamQuality.value,
+                        items: const [
+                          DropdownMenuItem(
+                            value: '320',
+                            child: Text('Alta (320 kbps)',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                          DropdownMenuItem(
+                            value: '256',
+                            child: Text('Media (256 kbps)',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                          DropdownMenuItem(
+                            value: '128',
+                            child: Text('Bassa (128 kbps)',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.setStreamQuality(value);
+                          }
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            addVerticalSpace(12),
+            // === LINGUA ===
             Obx(
               () => SizedBox(
                 height: 50,

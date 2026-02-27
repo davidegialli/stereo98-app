@@ -1,9 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:glassmorphism/glassmorphism.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:stereo98/controller/home_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/dimsensions.dart';
@@ -515,11 +517,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           )),
         ),
 
-        const SizedBox(width: 20),
+        const SizedBox(width: 14),
 
-        // ▶️ PLAY BUTTON
+        // 📤 SHARE
+        Obx(() {
+          final playing = _controller.isPressed.value;
+          return GestureDetector(
+            onTap: playing ? () => _shareSong() : null,
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(playing ? 0.08 : 0.03),
+                border: Border.all(color: Colors.white.withOpacity(playing ? 0.2 : 0.08)),
+              ),
+              child: Icon(
+                Icons.share,
+                color: playing ? Colors.white54 : Colors.white24,
+                size: 20,
+              ),
+            ),
+          );
+        }),
+
+        const SizedBox(width: 14),
+
+        // ▶️ PLAY BUTTON con vibrazione
         Obx(() => GestureDetector(
           onTap: () {
+            HapticFeedback.mediumImpact();
             if (_controller.isPressed.value) {
               _controller.stopStream();
             } else {
@@ -541,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         )),
 
-        const SizedBox(width: 20),
+        const SizedBox(width: 14),
 
         // ⭐ STELLA — voto chart, solo con play attivo
         Obx(() {
@@ -573,7 +599,56 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           );
         }),
+
+        const SizedBox(width: 14),
+
+        // 🎧 BITRATE — si illumina quando in play
+        Obx(() {
+          final playing = _controller.isPressed.value;
+          final quality = _controller.streamQuality.value;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: playing
+                ? const Color(0xFF4EC8E8).withOpacity(0.2)
+                : Colors.white.withOpacity(0.03),
+              border: Border.all(
+                color: playing
+                  ? const Color(0xFF4EC8E8).withOpacity(0.6)
+                  : Colors.white.withOpacity(0.08),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                quality,
+                style: TextStyle(
+                  color: playing ? const Color(0xFF4EC8E8) : Colors.white24,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }),
       ],
+    );
+  }
+
+  // 📤 Condividi brano in ascolto
+  void _shareSong() {
+    final titolo = _controller.titleValue.value;
+    final artista = _controller.artistValue.value;
+    if (titolo.isEmpty && artista.isEmpty) return;
+    HapticFeedback.lightImpact();
+    final box = context.findRenderObject() as RenderBox?;
+    Share.share(
+      'Sto ascoltando $titolo - $artista su Stereo 98 DAB+ 🎶\nhttps://stereo98.com',
+      subject: 'Stereo 98 DAB+',
+      sharePositionOrigin: box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : Rect.zero,
     );
   }
 
