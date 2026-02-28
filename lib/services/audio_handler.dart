@@ -37,13 +37,11 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
     // Gestione interruzioni (telefonata, navigatore, ecc.)
     session.interruptionEventStream.listen((event) {
       if (event.begin) {
-        // Interruzione iniziata (es. telefonata in arrivo)
         _wasPlayingBeforeInterruption = _player.playing;
         if (_player.playing) {
           _player.pause();
         }
       } else {
-        // Interruzione finita (es. telefonata terminata)
         if (_wasPlayingBeforeInterruption) {
           _player.play();
           _wasPlayingBeforeInterruption = false;
@@ -108,7 +106,15 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> stop() async {
-    await _player.pause();
+    await _player.stop();
+    await super.stop();
+  }
+
+  // Quando l'utente swipe-via la notifica, Android chiama questo
+  @override
+  Future<void> onTaskRemoved() async {
+    await _player.stop();
+    await super.onTaskRemoved();
   }
 
   Future<void> fullStop() async {

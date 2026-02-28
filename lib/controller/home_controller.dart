@@ -710,7 +710,15 @@ class HomeController extends GetxController {
           // 📻 Salva in cronologia
           _saveToCronologia(newArtist, newTitle);
 
+          // Aggiorna subito titolo/artista nella notifica
           _updateNotification();
+
+          // Dopo 2s aggiorna di nuovo con artwork fresca (RadioBOSS ha ritardo)
+          Future.delayed(const Duration(seconds: 2), () {
+            _artworkTs = DateTime.now().millisecondsSinceEpoch;
+            _updateNotification();
+          });
+
           _checkIfCurrentSongFavorited();
           _checkIfCurrentSongVoted();
         }

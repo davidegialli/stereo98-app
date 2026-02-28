@@ -52,7 +52,7 @@ Future<void> main() async {
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.stereo98.dabplus.audio',
         androidNotificationChannelName: 'Stereo 98 DAB+',
-        androidNotificationOngoing: false,
+        androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
         androidNotificationIcon: 'drawable/ic_notification',
       ),
@@ -78,8 +78,9 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final storage = Get.put(StorageService());
+  final _box = GetStorage();
 
   final dark = ThemeData.dark();
   final themeCollection = ThemeCollection(themes: {
@@ -100,7 +101,37 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initialConfig();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // Aggiorna tema se è in modalità auto
+    final savedMode = _box.read('stereo98_theme_mode') ?? 0;
+    if (savedMode == AppThemes.auto) {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      final effectiveTheme = brightness == Brightness.dark
+          ? AppThemes.dark
+          : AppThemes.light;
+      DynamicTheme.of(context)?.setTheme(effectiveTheme);
+    }
+  }
+
+  int _getInitialTheme() {
+    final savedMode = _box.read('stereo98_theme_mode') ?? 0;
+    if (savedMode == AppThemes.auto) {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      return brightness == Brightness.dark ? AppThemes.dark : AppThemes.light;
+    }
+    if (savedMode == AppThemes.dark) return AppThemes.dark;
+    return AppThemes.light;
   }
 
   @override
@@ -109,7 +140,7 @@ class _MyAppState extends State<MyApp> {
       designSize: const Size(414, 896),
       builder: (_, child) => DynamicTheme(
           themeCollection: themeCollection,
-          defaultThemeId: AppThemes.light,
+          defaultThemeId: _getInitialTheme(),
           builder: (context, theme) {
             return GetMaterialApp(
               builder: (context, widget) {
