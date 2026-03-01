@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "251701474469",
+    "project_id": "stereo98app",
+    "storage_bucket": "stereo98app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:251701474469:android:67b05290aafc8689db094c",
+        "android_client_info": {
+          "package_name": "com.stereo98.dabplus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOtNY2YOHA4aXw7p2fW8GHEszxMa4T38I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
