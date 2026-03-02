@@ -43,7 +43,7 @@ Future<void> main() async {
   InternetCheckDependencyInjection.init();
 
   // OneSignal
-  OneSignal.initialize('0c551b09-62f8-4877-9f48-4b84b70f9546');
+  OneSignal.initialize('3e87897b-47fb-4389-9efe-9b99ecc6949d');
   OneSignal.Notifications.requestPermission(true);
 
   try {
