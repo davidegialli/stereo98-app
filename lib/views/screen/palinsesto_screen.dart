@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:stereo98/controller/home_controller.dart';
 
 class PalinsestoScreen extends StatefulWidget {
   const PalinsestoScreen({super.key});
@@ -48,7 +49,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
       final e = end.split(':');
       final startMin = int.parse(s[0]) * 60 + int.parse(s[1]);
       var endMin = int.parse(e[0]) * 60 + int.parse(e[1]);
-      if (endMin == 0) endMin = 1440; // Fix: mezzanotte = 1440
+      if (endMin == 0) endMin = 1440;
       final nowMin = now.hour * 60 + now.minute;
       return nowMin >= startMin && nowMin < endMin;
     } catch (_) { return false; }
@@ -78,7 +79,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         ),
         child: Column(
           children: [
-            // 🔥 Giorni della settimana — dimensioni fisse, funziona in entrambe le orientazioni
+            // Giorni della settimana
             SizedBox(
               height: 52,
               child: ListView.builder(
@@ -120,7 +121,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                 },
               ),
             ),
-            // 🔥 Lista show
+            // Lista show
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
@@ -143,6 +144,9 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
     if (shows.isEmpty) {
       return const Center(child: Text('Nessuno show programmato', style: TextStyle(color: Colors.white)));
     }
+
+    final controller = Get.find<HomeController>();
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: shows.length,
@@ -154,55 +158,82 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         final end = show['orario_fine'] ?? '';
         final isLive = _isLive(start, end) && DateTime.now().weekday - 1 == _selectedDay;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: isLive
-                  ? [const Color(0xFFD85D9D).withOpacity(0.3), const Color(0xFF4EC8E8).withOpacity(0.15)]
-                  : [const Color(0xFFD85D9D).withOpacity(0.08), const Color(0xFF4EC8E8).withOpacity(0.04)],
+        // weekday: _selectedDay è 0=Lunedì..6=Domenica → +1 per Dart weekday
+        final weekday = _selectedDay + 1;
+        final showKey = '$nome|$weekday|$start';
+
+        return Obx(() {
+          final isFav = controller.isPalinsestoFavorite(showKey);
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: isLive
+                    ? [const Color(0xFFD85D9D).withOpacity(0.3), const Color(0xFF4EC8E8).withOpacity(0.15)]
+                    : [const Color(0xFFD85D9D).withOpacity(0.08), const Color(0xFF4EC8E8).withOpacity(0.04)],
+              ),
+              border: Border.all(
+                color: isLive ? const Color(0xFFD85D9D) : const Color(0xFFD85D9D).withOpacity(0.2),
+                width: isLive ? 1.5 : 1,
+              ),
             ),
-            border: Border.all(
-              color: isLive ? const Color(0xFFD85D9D) : const Color(0xFFD85D9D).withOpacity(0.2),
-              width: isLive ? 1.5 : 1,
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(10),
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: image.isNotEmpty
-                  ? Image.network(image, width: 55, height: 55, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder())
-                  : _placeholder(),
-            ),
-            title: Row(
-              children: [
-                if (isLive) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD85D9D),
-                      borderRadius: BorderRadius.circular(4),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(10),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: image.isNotEmpty
+                    ? Image.network(image, width: 55, height: 55, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _placeholder())
+                    : _placeholder(),
+              ),
+              title: Row(
+                children: [
+                  if (isLive) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD85D9D),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
-                    child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                    child: Text(nome,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      overflow: TextOverflow.ellipsis),
                   ),
-                  const SizedBox(width: 6),
                 ],
-                Expanded(
-                  child: Text(nome,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                    overflow: TextOverflow.ellipsis),
+              ),
+              subtitle: Text(
+                '$start - $end',
+                style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 13),
+              ),
+              trailing: GestureDetector(
+                onTap: () {
+                  controller.togglePalinsestoFavorite(
+                    showKey: showKey,
+                    showName: nome,
+                    weekday: weekday,
+                    startTime: start,
+                  );
+                },
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    key: ValueKey(isFav),
+                    color: isFav ? const Color(0xFFD85D9D) : Colors.white.withOpacity(0.3),
+                    size: 26,
+                  ),
                 ),
-              ],
+              ),
             ),
-            subtitle: Text(
-              '$start - $end',
-              style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 13),
-            ),
-          ),
-        );
+          );
+        });
       },
     );
   }

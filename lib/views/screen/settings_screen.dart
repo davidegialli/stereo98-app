@@ -186,6 +186,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             addVerticalSpace(12),
+            // === NOTIFICA PALINSESTO ===
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Notifica programmi',
+                    style: CustomStyler.settingsScreenTextStyle,
+                  ),
+                  Obx(() {
+                    final controller = Get.find<HomeController>();
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownButton<int>(
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white,
+                          size: 35,
+                        ),
+                        value: controller.notifyMinutesBefore.value,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 5,
+                            child: Text('5 min prima',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                          DropdownMenuItem(
+                            value: 10,
+                            child: Text('10 min prima',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                          DropdownMenuItem(
+                            value: 15,
+                            child: Text('15 min prima',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                          DropdownMenuItem(
+                            value: 30,
+                            child: Text('30 min prima',
+                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.setNotifyMinutes(value);
+                          }
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            addVerticalSpace(12),
             // === LINGUA ===
             Obx(
               () => SizedBox(

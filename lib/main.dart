@@ -16,6 +16,7 @@ import 'package:stereo98/utils/network_check/dependency_injection.dart';
 import 'package:stereo98/utils/strings.dart';
 import 'package:stereo98/utils/themes.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:stereo98/services/notification_service.dart';
    
     
 Future<void> main() async {
@@ -45,6 +46,9 @@ Future<void> main() async {
   // OneSignal
   OneSignal.initialize('3e87897b-47fb-4389-9efe-9b99ecc6949d');
   OneSignal.Notifications.requestPermission(true);
+
+  // Local notifications (palinsesto reminders)
+  await NotificationService().init();
 
   try {
     final audioHandler = await AudioService.init(

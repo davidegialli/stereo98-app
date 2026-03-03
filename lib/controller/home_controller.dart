@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:stereo98/services/audio_handler.dart';
+import 'package:stereo98/services/notification_service.dart';
 
 class HomeController extends GetxController {
   late final RadioAudioHandler _audioHandler;
@@ -68,6 +69,10 @@ class HomeController extends GetxController {
   // Chart
   var chart = <Map<String, dynamic>>[].obs;
 
+  // 📅 Preferiti palinsesto (programmi)
+  var palinsestoFavorites = <String>{}.obs;  // Set di showKey ("nome|weekday|start")
+  var notifyMinutesBefore = 10.obs;  // minuti prima della notifica
+
   // 📻 Cronologia brani ascoltati
   var cronologia = <Map<String, String>>[].obs;
 
@@ -116,6 +121,8 @@ class HomeController extends GetxController {
     _initDeviceId();
     _loadLocalFavorites();
     _loadCronologia();
+    _loadPalinsestoFavorites();
+    NotificationService().init();
     streamQuality.value = _box.read('stereo98_stream_quality') ?? '320';
 
     getNowPlaying();
@@ -379,6 +386,85 @@ class HomeController extends GetxController {
   void clearCronologia() {
     cronologia.clear();
     _box.remove('stereo98_cronologia');
+  }
+
+  // ==========================================================================
+  // 📅 PREFERITI PALINSESTO (programmi + notifiche locali)
+  // ==========================================================================
+  void _loadPalinsestoFavorites() {
+    final stored = _box.read<List>('stereo98_palinsesto_favs');
+    if (stored != null) {
+      palinsestoFavorites.value = Set<String>.from(stored.map((e) => e.toString()));
+    }
+    notifyMinutesBefore.value = _box.read('stereo98_notify_minutes') ?? 10;
+  }
+
+  void _savePalinsestoFavorites() {
+    _box.write('stereo98_palinsesto_favs', palinsestoFavorites.toList());
+  }
+
+  bool isPalinsestoFavorite(String showKey) {
+    return palinsestoFavorites.contains(showKey);
+  }
+
+  void togglePalinsestoFavorite({
+    required String showKey,
+    required String showName,
+    required int weekday,
+    required String startTime,
+  }) {
+    final id = NotificationService.generateShowId(showName, weekday, startTime);
+
+    if (palinsestoFavorites.contains(showKey)) {
+      palinsestoFavorites.remove(showKey);
+      NotificationService().cancelShowReminder(id);
+    } else {
+      palinsestoFavorites.add(showKey);
+      _scheduleNotification(showKey, showName, weekday, startTime);
+    }
+    _savePalinsestoFavorites();
+    update();
+  }
+
+  void _scheduleNotification(String showKey, String showName, int weekday, String startTime) {
+    try {
+      final parts = startTime.split(':');
+      if (parts.length < 2) return;
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final id = NotificationService.generateShowId(showName, weekday, startTime);
+
+      NotificationService().scheduleShowReminder(
+        showId: id,
+        showName: showName,
+        weekday: weekday,
+        startHour: hour,
+        startMinute: minute,
+        minutesBefore: notifyMinutesBefore.value,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Schedule notification error: $e');
+    }
+  }
+
+  /// Riprogramma tutte le notifiche (quando cambia minutesBefore)
+  Future<void> rescheduleAllNotifications() async {
+    await NotificationService().cancelAll();
+    for (final key in palinsestoFavorites) {
+      final parts = key.split('|');
+      if (parts.length >= 3) {
+        final showName = parts[0];
+        final weekday = int.tryParse(parts[1]) ?? 1;
+        final startTime = parts[2];
+        _scheduleNotification(key, showName, weekday, startTime);
+      }
+    }
+  }
+
+  void setNotifyMinutes(int minutes) {
+    notifyMinutesBefore.value = minutes;
+    _box.write('stereo98_notify_minutes', minutes);
+    rescheduleAllNotifications();
   }
 
   // ==========================================================================
