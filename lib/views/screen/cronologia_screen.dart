@@ -1,10 +1,41 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:stereo98/controller/home_controller.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CronologiaScreen extends StatelessWidget {
   const CronologiaScreen({super.key});
+
+  void _openAppleMusic(String artista, String titolo) async {
+    try {
+      final query = Uri.encodeComponent('$artista $titolo');
+      final apiUrl = Uri.parse('https://itunes.apple.com/search?term=$query&media=music&limit=1&country=it');
+      final response = await http.get(apiUrl).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final results = data['results'] as List? ?? [];
+        if (results.isNotEmpty) {
+          final trackUrl = results[0]['trackViewUrl']?.toString() ?? '';
+          if (trackUrl.isNotEmpty) {
+            final url = Uri.parse(trackUrl);
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url, mode: LaunchMode.externalApplication);
+              return;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    final fallback = Uri.parse('https://www.google.com/search?q=${Uri.encodeComponent('$artista $titolo apple music')}');
+    if (await canLaunchUrl(fallback)) {
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,13 +192,32 @@ class CronologiaScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Orario
-                    Text(
-                      ora,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
-                        fontSize: 11,
-                      ),
+                    // Orario + Apple Music
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          ora,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => _openAppleMusic(artista, titolo),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)],
+                              ),
+                            ),
+                            child: const Icon(Icons.play_arrow, color: Colors.white, size: 14),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

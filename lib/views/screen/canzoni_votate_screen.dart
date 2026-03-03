@@ -47,10 +47,32 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
   }
 
   void _openAppleMusic(String artista, String titolo) async {
-    final query = Uri.encodeComponent('$artista $titolo');
-    final url = Uri.parse('https://music.apple.com/search?term=$query');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    // Cerca tramite iTunes API per ottenere il link diretto
+    try {
+      final query = Uri.encodeComponent('$artista $titolo');
+      final apiUrl = Uri.parse('https://itunes.apple.com/search?term=$query&media=music&limit=1&country=it');
+      final response = await http.get(apiUrl).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final results = data['results'] as List? ?? [];
+        if (results.isNotEmpty) {
+          final trackUrl = results[0]['trackViewUrl']?.toString() ?? '';
+          if (trackUrl.isNotEmpty) {
+            final url = Uri.parse(trackUrl);
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url, mode: LaunchMode.externalApplication);
+              return;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Fallback: ricerca Google
+    final fallback = Uri.parse('https://www.google.com/search?q=${Uri.encodeComponent('$artista $titolo apple music')}');
+    if (await canLaunchUrl(fallback)) {
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
     }
   }
 
