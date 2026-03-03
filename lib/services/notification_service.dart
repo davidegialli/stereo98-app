@@ -30,6 +30,15 @@ class NotificationService {
     );
 
     await _plugin.initialize(settings);
+
+    // Richiedi permessi notifiche locali su Android 13+
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+      await androidPlugin.requestExactAlarmsPermission();
+    }
+
     _initialized = true;
     if (kDebugMode) print('[Stereo98] NotificationService initialized');
   }
