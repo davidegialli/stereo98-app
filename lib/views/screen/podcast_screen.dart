@@ -1,9 +1,9 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class PodcastScreen extends StatefulWidget {
   const PodcastScreen({super.key});
@@ -39,8 +39,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
     }
   }
 
-  void _openUrl(String url, String title) {
-    Get.to(() => _InAppBrowser(url: url, title: title));
+  void _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -118,7 +121,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.play_circle_filled, color: Color(0xFFD85D9D), size: 36),
-                            onPressed: () => _openUrl(webUrl, title),
+                            onPressed: () => _openUrl(webUrl),
                           ),
                         ),
                       );
@@ -149,54 +152,5 @@ class _PodcastScreenState extends State<PodcastScreen> {
       .replaceAll('&lt;', '<').replaceAll('&gt;', '>')
       .replaceAll('&hellip;', '…')
       .replaceAll(RegExp(r'<[^>]*>'), '');
-  }
-}
-
-class _InAppBrowser extends StatefulWidget {
-  final String url;
-  final String title;
-  const _InAppBrowser({required this.url, required this.title});
-  @override
-  State<_InAppBrowser> createState() => _InAppBrowserState();
-}
-
-class _InAppBrowserState extends State<_InAppBrowser> {
-  bool _isLoading = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(widget.title,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-          maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Get.back(),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          InAppWebView(
-            initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-            initialSettings: InAppWebViewSettings(
-              javaScriptEnabled: true,
-              mediaPlaybackRequiresUserGesture: false,
-              allowsInlineMediaPlayback: true,
-            ),
-            onLoadStart: (c, u) => setState(() => _isLoading = true),
-            onLoadStop: (c, u) => setState(() => _isLoading = false),
-          ),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D))),
-        ],
-      ),
-    );
   }
 }
