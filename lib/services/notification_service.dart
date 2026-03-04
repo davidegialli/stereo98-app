@@ -36,7 +36,7 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
-      await androidPlugin.requestExactAlarmsPermission();
+      // Sveglia esatta non necessaria (usiamo inexact)
     }
 
     _initialized = true;
