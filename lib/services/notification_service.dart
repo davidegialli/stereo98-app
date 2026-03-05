@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -31,12 +32,14 @@ class NotificationService {
 
     await _plugin.initialize(settings);
 
-    // Richiedi permessi notifiche locali su Android 13+
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
-      // Sveglia esatta non necessaria (usiamo inexact)
+    // Richiedi permessi notifiche locali solo su Android
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.requestNotificationsPermission();
+        await androidPlugin.requestExactAlarmsPermission();
+      }
     }
 
     _initialized = true;
@@ -44,11 +47,6 @@ class NotificationService {
   }
 
   /// Programma notifica per un programma del palinsesto
-  /// [showId] — identificativo unico (hash del nome + giorno + orario)
-  /// [showName] — nome del programma
-  /// [weekday] — 1=Lunedì, 7=Domenica
-  /// [startHour], [startMinute] — orario inizio
-  /// [minutesBefore] — quanti minuti prima notificare
   Future<void> scheduleShowReminder({
     required int showId,
     required String showName,
@@ -61,21 +59,17 @@ class NotificationService {
 
     final now = tz.TZDateTime.now(tz.local);
 
-    // Trova la prossima occorrenza di questo giorno/orario
     var scheduledDate = tz.TZDateTime(
       tz.local,
       now.year, now.month, now.day,
       startHour, startMinute,
     ).subtract(Duration(minutes: minutesBefore));
 
-    // Aggiusta al giorno corretto della settimana
-    // weekday: 1=Lun...7=Dom, DateTime.weekday: 1=Mon...7=Sun
     int daysUntil = weekday - now.weekday;
     if (daysUntil < 0) daysUntil += 7;
     if (daysUntil == 0 && scheduledDate.isBefore(now)) daysUntil = 7;
     scheduledDate = scheduledDate.add(Duration(days: daysUntil));
 
-    // Se è nel passato, sposta alla settimana prossima
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 7));
     }
@@ -107,7 +101,7 @@ class NotificationService {
       '$showName tra $minutesBefore minuti!',
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
@@ -117,19 +111,16 @@ class NotificationService {
     }
   }
 
-  /// Cancella notifica per un programma
   Future<void> cancelShowReminder(int showId) async {
     await _plugin.cancel(showId);
     if (kDebugMode) print('[Stereo98] Notifica cancellata: ID $showId');
   }
 
-  /// Cancella tutte le notifiche palinsesto
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
     if (kDebugMode) print('[Stereo98] Tutte le notifiche cancellate');
   }
 
-  /// Genera un ID stabile per un programma + giorno
   static int generateShowId(String showName, int weekday, String startTime) {
     return '${showName.toLowerCase().trim()}|$weekday|$startTime'.hashCode.abs() % 100000;
   }
