@@ -122,7 +122,7 @@ class HomeController extends GetxController {
     _loadLocalFavorites();
     _loadCronologia();
     _loadPalinsestoFavorites();
-    NotificationService().init();
+    NotificationService().init().then((_) => rescheduleAllNotifications());
     streamQuality.value = _box.read('stereo98_stream_quality') ?? '320';
 
     getNowPlaying();
