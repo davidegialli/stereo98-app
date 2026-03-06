@@ -8,6 +8,7 @@ import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -51,10 +52,16 @@ class NotificationService {
     _initialized = true;
 
     // Flush notifiche stale da build precedenti (cambio alarmClock → exactAllowWhileIdle)
-    // Se cancelAll() fallisce per dati corrotti in SharedPreferences, ignoriamo silenziosamente
-    try {
-      await _plugin.cancelAll();
-    } catch (_) {}
+    // cancelAll() crashava su loadScheduledNotifications — puliamo direttamente SharedPreferences
+    if (Platform.isAndroid) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('scheduled_notifications');
+        if (kDebugMode) print('[Stereo98] SharedPreferences scheduled_notifications rimosso');
+      } catch (e) {
+        if (kDebugMode) print('[Stereo98] SP clear error: $e');
+      }
+    }
   }
 
   static const _androidDetails = AndroidNotificationDetails(
