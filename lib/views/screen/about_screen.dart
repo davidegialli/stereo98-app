@@ -190,7 +190,7 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(width: 12),
             Text(label, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 13)),
             const Spacer(),
-            Flexible(
+            Expanded(
               child: Text(
                 value,
                 style: const TextStyle(

@@ -7,8 +7,8 @@
 import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -52,14 +52,15 @@ class NotificationService {
     _initialized = true;
 
     // Flush notifiche stale da build precedenti (cambio alarmClock → exactAllowWhileIdle)
-    // cancelAll() crashava su loadScheduledNotifications — puliamo direttamente SharedPreferences
+    // Il plugin usa SharedPreferences named "notification_plugin_cache" (non il default),
+    // quindi usiamo un MethodChannel per cancellarlo direttamente via Android native.
     if (Platform.isAndroid) {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('scheduled_notifications');
-        if (kDebugMode) print('[Stereo98] SharedPreferences scheduled_notifications rimosso');
+        const channel = MethodChannel('com.stereo98.dabplus/notifications');
+        await channel.invokeMethod('clearNotificationCache');
+        if (kDebugMode) print('[Stereo98] notification_plugin_cache cancellato');
       } catch (e) {
-        if (kDebugMode) print('[Stereo98] SP clear error: $e');
+        if (kDebugMode) print('[Stereo98] clearNotificationCache error: $e');
       }
     }
   }
