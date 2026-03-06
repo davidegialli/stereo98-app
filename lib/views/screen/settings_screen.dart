@@ -286,47 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-            // === TEST NOTIFICHE ===
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    // FIX: testNotification ora ritorna String con esito reale
-                    final result = await NotificationService().testNotification();
-                    Get.snackbar(
-                      result.startsWith('OK') ? 'Successo' : 'Errore',
-                      result,
-                      snackPosition: SnackPosition.BOTTOM,
-                      duration: const Duration(seconds: 5),
-                      backgroundColor: result.startsWith('OK') ? Colors.green : Colors.red,
-                      colorText: Colors.white,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD85D9D)),
-                  child: const Text("Test Immediata", style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    Get.snackbar('Test', 'Scheduling...', snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 2));
-                    // FIX: testScheduledNotification ora ritorna String con esito reale
-                    final result = await NotificationService().testScheduledNotification();
-                    Get.snackbar(
-                      result.startsWith('OK') ? 'Successo' : 'Attenzione',
-                      result,
-                      snackPosition: SnackPosition.BOTTOM,
-                      duration: const Duration(seconds: 8),
-                      backgroundColor: result.startsWith('OK') ? Colors.green : Colors.orange,
-                      colorText: Colors.white,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4EC8E8)),
-                  child: const Text("Test 2 Minuti", style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+
           ],
         ),
       ),
