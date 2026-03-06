@@ -32,7 +32,6 @@ class NotificationService {
 
     await _plugin.initialize(settings);
 
-    // Richiedi permessi notifiche locali solo su Android
     if (Platform.isAndroid) {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -43,10 +42,8 @@ class NotificationService {
     }
 
     _initialized = true;
-    if (kDebugMode) print('[Stereo98] NotificationService initialized');
   }
 
-  /// Programma notifica per un programma del palinsesto
   Future<void> scheduleShowReminder({
     required int showId,
     required String showName,
@@ -55,70 +52,154 @@ class NotificationService {
     required int startMinute,
     required int minutesBefore,
   }) async {
-    if (!_initialized) await init();
+    try {
+      if (!_initialized) await init();
 
-    final now = tz.TZDateTime.now(tz.local);
+      final now = tz.TZDateTime.now(tz.local);
 
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year, now.month, now.day,
-      startHour, startMinute,
-    ).subtract(Duration(minutes: minutesBefore));
+      var showTime = tz.TZDateTime(
+        tz.local,
+        now.year, now.month, now.day,
+        startHour, startMinute,
+      );
 
-    int daysUntil = weekday - now.weekday;
-    if (daysUntil < 0) daysUntil += 7;
-    if (daysUntil == 0 && scheduledDate.isBefore(now)) daysUntil = 7;
-    scheduledDate = scheduledDate.add(Duration(days: daysUntil));
+      int daysUntil = weekday - now.weekday;
+      if (daysUntil < 0) daysUntil += 7;
+      if (daysUntil == 0 && showTime.isBefore(now)) daysUntil = 7;
+      showTime = showTime.add(Duration(days: daysUntil));
 
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 7));
+      var scheduledDate = showTime.subtract(Duration(minutes: minutesBefore));
+
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 7));
+      }
+
+      await _plugin.cancel(showId);
+
+      const androidDetails = AndroidNotificationDetails(
+        'stereo98_shows',
+        'Programmi Stereo 98',
+        channelDescription: 'Promemoria programmi preferiti',
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _plugin.zonedSchedule(
+        showId,
+        'Stereo 98 DAB+',
+        '$showName tra $minutesBefore minuti!',
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Errore schedule: $e');
     }
+  }
 
-    final androidDetails = AndroidNotificationDetails(
-      'stereo98_palinsesto',
-      'Palinsesto Stereo 98',
-      channelDescription: 'Promemoria programmi preferiti',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@drawable/ic_notification',
-      color: Color(0xFFD85D9D),
-    );
+  /// Test: notifica IMMEDIATA
+  Future<void> testNotification() async {
+    try {
+      if (!_initialized) await init();
+      await _plugin.cancel(99999);
 
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+      const androidDetails = AndroidNotificationDetails(
+        'stereo98_shows',
+        'Programmi Stereo 98',
+        channelDescription: 'Promemoria programmi preferiti',
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+      );
 
-    final details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
 
-    await _plugin.zonedSchedule(
-      showId,
-      '📻 Stereo 98 DAB+',
-      '$showName tra $minutesBefore minuti!',
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-    );
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
 
-    if (kDebugMode) {
-      print('[Stereo98] Notifica programmata: "$showName" → $scheduledDate (${minutesBefore}min prima)');
+      await _plugin.show(
+        99999,
+        'Stereo 98 DAB+',
+        'Test notifica immediata - funziona!',
+        details,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Errore test: $e');
+    }
+  }
+
+  /// Test: notifica PROGRAMMATA tra 2 minuti
+  Future<void> testScheduledNotification() async {
+    try {
+      if (!_initialized) await init();
+      await _plugin.cancel(99998);
+
+      final now = tz.TZDateTime.now(tz.local);
+      final scheduledDate = now.add(const Duration(minutes: 2));
+
+      const androidDetails = AndroidNotificationDetails(
+        'stereo98_shows',
+        'Programmi Stereo 98',
+        channelDescription: 'Promemoria programmi preferiti',
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _plugin.zonedSchedule(
+        99998,
+        'Stereo 98 DAB+',
+        'Test programmato 2min - funziona!',
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] Errore test scheduled: $e');
     }
   }
 
   Future<void> cancelShowReminder(int showId) async {
     await _plugin.cancel(showId);
-    if (kDebugMode) print('[Stereo98] Notifica cancellata: ID $showId');
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
-    if (kDebugMode) print('[Stereo98] Tutte le notifiche cancellate');
   }
 
   static int generateShowId(String showName, int weekday, String startTime) {

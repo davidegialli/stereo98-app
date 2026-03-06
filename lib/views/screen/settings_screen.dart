@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:stereo98/controller/home_controller.dart';
+import 'package:stereo98/services/notification_service.dart';
 import 'package:stereo98/controller/language_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/custom_style.dart';
@@ -285,6 +286,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+            // === TEST NOTIFICHE ===
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    await NotificationService().testNotification();
+                    Get.snackbar("Test", "Notifica immediata inviata!", snackPosition: SnackPosition.BOTTOM);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD85D9D)),
+                  child: const Text("Test Immediata", style: TextStyle(color: Colors.white, fontSize: 12)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await NotificationService().testScheduledNotification();
+                    Get.snackbar("Test", "Notifica tra 2 minuti!", snackPosition: SnackPosition.BOTTOM);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4EC8E8)),
+                  child: const Text("Test 2 Minuti", style: TextStyle(color: Colors.white, fontSize: 12)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
