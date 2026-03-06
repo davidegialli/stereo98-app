@@ -7,7 +7,6 @@
 import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -51,18 +50,7 @@ class NotificationService {
 
     _initialized = true;
 
-    // Flush notifiche stale da build precedenti (cambio alarmClock → exactAllowWhileIdle)
-    // Il plugin usa SharedPreferences named "notification_plugin_cache" (non il default),
-    // quindi usiamo un MethodChannel per cancellarlo direttamente via Android native.
-    if (Platform.isAndroid) {
-      try {
-        const channel = MethodChannel('com.stereo98.dabplus/notifications');
-        await channel.invokeMethod('clearNotificationCache');
-        if (kDebugMode) print('[Stereo98] notification_plugin_cache cancellato');
-      } catch (e) {
-        if (kDebugMode) print('[Stereo98] clearNotificationCache error: $e');
-      }
-    }
+
   }
 
   static const _androidDetails = AndroidNotificationDetails(
@@ -73,6 +61,7 @@ class NotificationService {
     priority: Priority.max,
     playSound: true,
     enableVibration: true,
+    icon: 'ic_notification',
   );
 
   static const _notifDetails = NotificationDetails(
