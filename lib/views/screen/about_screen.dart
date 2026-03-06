@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -141,7 +142,12 @@ class _AboutScreenState extends State<AboutScreen> {
             addVerticalSpace(24),
             _infoRow(Icons.radio, 'Frequenza', 'DAB+ Digitale Terrestre'),
             addVerticalSpace(10),
-            _infoRow(Icons.wifi, 'Streaming', 'stereo98.com'),
+            _infoRowTappable(
+              Icons.wifi,
+              'Streaming',
+              'stereo98.com',
+              'https://stereo98.com',
+            ),
             addVerticalSpace(10),
             _infoRow(Icons.location_on, 'Studi', 'Veneto • Piemonte • Lazio'),
             addVerticalSpace(10),
@@ -157,6 +163,48 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             addVerticalSpace(20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRowTappable(IconData icon, String label, String value, String url) {
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xFF4EC8E8).withOpacity(0.06),
+          border: Border.all(color: const Color(0xFF4EC8E8).withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF4EC8E8), size: 20),
+            const SizedBox(width: 12),
+            Text(label, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 13)),
+            const Spacer(),
+            Flexible(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white54,
+                ),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.open_in_new, color: Colors.white38, size: 14),
           ],
         ),
       ),

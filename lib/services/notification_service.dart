@@ -49,6 +49,12 @@ class NotificationService {
     }
 
     _initialized = true;
+
+    // Flush notifiche stale da build precedenti (cambio alarmClock → exactAllowWhileIdle)
+    // Se cancelAll() fallisce per dati corrotti in SharedPreferences, ignoriamo silenziosamente
+    try {
+      await _plugin.cancelAll();
+    } catch (_) {}
   }
 
   static const _androidDetails = AndroidNotificationDetails(
@@ -99,7 +105,7 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 7));
       }
 
-      await _plugin.cancel(showId);
+      try { await _plugin.cancel(showId); } catch (_) {}
 
       // FIX: exactAllowWhileIdle è compatibile con SCHEDULE_EXACT_ALARM
       // alarmClock richiederebbe USE_EXACT_ALARM (permesso diverso!) e fallisce silenziosamente
@@ -125,7 +131,7 @@ class NotificationService {
   Future<String> testNotification() async {
     try {
       if (!_initialized) await init();
-      await _plugin.cancel(99999);
+      try { await _plugin.cancel(99999); } catch (_) {}
 
       await _plugin.show(
         99999,
@@ -144,7 +150,7 @@ class NotificationService {
   Future<String> testScheduledNotification() async {
     try {
       if (!_initialized) await init();
-      await _plugin.cancel(99998);
+      try { await _plugin.cancel(99998); } catch (_) {}
 
       final now = tz.TZDateTime.now(tz.local);
       final scheduledDate = now.add(const Duration(minutes: 2));

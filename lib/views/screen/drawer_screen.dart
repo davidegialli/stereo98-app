@@ -10,7 +10,6 @@ import 'package:stereo98/widget_helper/image_widget.dart';
 import 'package:stereo98/widget_helper/menu_item_widget.dart';
 import 'package:rating_dialog/rating_dialog.dart';
 import 'package:store_redirect/store_redirect.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class DrawerScreen extends StatelessWidget {
   DrawerScreen({super.key});
@@ -116,16 +115,6 @@ class DrawerScreen extends StatelessWidget {
           screenName: 'Scrivici',
           icon: Icons.mail_outline,
           onPressed: () => Get.toNamed(Routes.scriviciScreen),
-        ),
-        MenuItemWidget(
-          screenName: 'Website',
-          icon: Icons.language,
-          onPressed: () async {
-            final url = Uri.parse('https://stereo98.com');
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            }
-          },
         ),
         MenuItemWidget(
           screenName: 'Come funziona',
