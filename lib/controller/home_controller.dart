@@ -71,6 +71,7 @@ class HomeController extends GetxController {
 
   // 📅 Preferiti palinsesto (programmi)
   var palinsestoFavorites = <String>{}.obs;  // Set di showKey ("nome|weekday|start")
+  var palinsestoShowIds = <String, int>{}.obs; // showKey → WP show_id
   var notifyMinutesBefore = 10.obs;  // minuti prima della notifica
 
   // 📻 Cronologia brani ascoltati
@@ -105,6 +106,8 @@ class HomeController extends GetxController {
   static const String likesApiUrl = 'https://stereo98.com/wp-json/stereo98/v1/likes';
   static const String chartApiUrl = 'https://stereo98.com/wp-json/stereo98/v1/chart';
   static const String fanApiUrl = 'https://stereo98.com/wp-json/stereo98/v1/fan';
+  static const String notificaShowUrl  = 'https://stereo98.com/wp-json/stereo98/v1/notifica-show';
+  static const String notificheShowUrl = 'https://stereo98.com/wp-json/stereo98/v1/notifiche-show';
 
   static const Map<String, String> _studioNomi = {
     '+393532156811': 'Studio Piemonte',
@@ -396,11 +399,20 @@ class HomeController extends GetxController {
     if (stored != null) {
       palinsestoFavorites.value = Set<String>.from(stored.map((e) => e.toString()));
     }
+    final storedIds = _box.read<Map>('stereo98_palinsesto_ids');
+    if (storedIds != null) {
+      palinsestoShowIds.value = Map<String, int>.from(
+        storedIds.map((k, v) => MapEntry(k.toString(), int.tryParse(v.toString()) ?? 0)),
+      );
+    }
     notifyMinutesBefore.value = _box.read('stereo98_notify_minutes') ?? 10;
+    Future.delayed(const Duration(seconds: 3), _fetchNotificheShowFromServer);
   }
 
   void _savePalinsestoFavorites() {
     _box.write('stereo98_palinsesto_favs', palinsestoFavorites.toList());
+    _box.write('stereo98_palinsesto_ids',
+      palinsestoShowIds.map((k, v) => MapEntry(k, v.toString())));
   }
 
   bool isPalinsestoFavorite(String showKey) {
@@ -412,18 +424,79 @@ class HomeController extends GetxController {
     required String showName,
     required int weekday,
     required String startTime,
+    required int showId,
   }) {
-    final id = NotificationService.generateShowId(showName, weekday, startTime);
-
     if (palinsestoFavorites.contains(showKey)) {
       palinsestoFavorites.remove(showKey);
-      NotificationService().cancelShowReminder(id);
+      palinsestoShowIds.remove(showKey);
+      _apiToggleNotificaShow(showId: showId, showName: showName, attiva: false);
     } else {
       palinsestoFavorites.add(showKey);
-      _scheduleNotification(showKey, showName, weekday, startTime);
+      palinsestoShowIds[showKey] = showId;
+      _apiToggleNotificaShow(showId: showId, showName: showName, attiva: true);
     }
     _savePalinsestoFavorites();
     update();
+  }
+
+  Future<void> _apiToggleNotificaShow({
+    required int showId,
+    required String showName,
+    required bool attiva,
+  }) async {
+    try {
+      final playerId = OneSignal.User.pushSubscription.id ?? '';
+      await http.post(
+        Uri.parse(notificaShowUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'device_id'           : _deviceId,
+          'onesignal_player_id' : playerId,
+          'show_id'             : showId,
+          'show_nome'           : showName,
+          'attiva'              : attiva,
+          'anticipo_minuti'     : notifyMinutesBefore.value,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      if (kDebugMode) print('[Stereo98] notifica-show: show $showId attiva=$attiva anticipo=${notifyMinutesBefore.value}min');
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] notifica-show error: $e');
+    }
+  }
+
+  Future<void> _fetchNotificheShowFromServer() async {
+    try {
+      final resp = await http.get(
+        Uri.parse('$notificheShowUrl?device_id=$_deviceId'),
+      ).timeout(const Duration(seconds: 10));
+      if (resp.statusCode != 200) return;
+      final data = json.decode(resp.body);
+      final iscrizioni = data['iscrizioni'] as List? ?? [];
+      final serverShowIds = iscrizioni.map((i) => i['show_id'] as int).toSet();
+      // Rimuovi favorites locali non più sul server
+      final keysToRemove = palinsestoFavorites.where((key) {
+        final id = palinsestoShowIds[key] ?? 0;
+        return id > 0 && !serverShowIds.contains(id);
+      }).toList();
+      for (final k in keysToRemove) {
+        palinsestoFavorites.remove(k);
+        palinsestoShowIds.remove(k);
+      }
+      _savePalinsestoFavorites();
+      if (kDebugMode) print('[Stereo98] Sync iscrizioni show: ${iscrizioni.length}');
+    } catch (e) {
+      if (kDebugMode) print('[Stereo98] fetchNotificheShow error: $e');
+    }
+  }
+
+  Future<void> _syncAllNotifiche() async {
+    for (final key in palinsestoFavorites) {
+      final showId = palinsestoShowIds[key] ?? 0;
+      if (showId == 0) continue;
+      final parts = key.split('|');
+      final showName = parts.isNotEmpty ? parts[0] : '';
+      await _apiToggleNotificaShow(showId: showId, showName: showName, attiva: true);
+    }
   }
 
   void _scheduleNotification(String showKey, String showName, int weekday, String startTime) {
@@ -464,7 +537,7 @@ class HomeController extends GetxController {
   void setNotifyMinutes(int minutes) {
     notifyMinutesBefore.value = minutes;
     _box.write('stereo98_notify_minutes', minutes);
-    rescheduleAllNotifications();
+    _syncAllNotifiche();
   }
 
   // ==========================================================================

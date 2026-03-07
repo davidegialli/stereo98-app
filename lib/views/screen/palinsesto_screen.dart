@@ -219,6 +219,9 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                     showName: nome,
                     weekday: weekday,
                     startTime: start,
+                    showId: (show['show_id'] is int)
+                        ? show['show_id'] as int
+                        : int.tryParse(show['show_id']?.toString() ?? '0') ?? 0,
                   );
                 },
                 child: AnimatedSwitcher(
