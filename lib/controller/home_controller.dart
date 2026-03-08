@@ -473,16 +473,17 @@ class HomeController extends GetxController {
       final data = json.decode(resp.body);
       final iscrizioni = data['iscrizioni'] as List? ?? [];
       final serverShowIds = iscrizioni.map((i) => i['show_id'] as int).toSet();
-      // Rimuovi favorites locali non più sul server
-      final keysToRemove = palinsestoFavorites.where((key) {
+      // Se il locale ha preferiti che il server non conosce (es. salvataggio fallito),
+      // ri-manda al server invece di cancellarli in locale
+      for (final key in palinsestoFavorites) {
         final id = palinsestoShowIds[key] ?? 0;
-        return id > 0 && !serverShowIds.contains(id);
-      }).toList();
-      for (final k in keysToRemove) {
-        palinsestoFavorites.remove(k);
-        palinsestoShowIds.remove(k);
+        if (id > 0 && !serverShowIds.contains(id)) {
+          final parts = key.split('|');
+          final showName = parts.isNotEmpty ? parts[0] : '';
+          await _apiToggleNotificaShow(showId: id, showName: showName, attiva: true);
+          if (kDebugMode) print('[Stereo98] Re-sync show $id al server');
+        }
       }
-      _savePalinsestoFavorites();
       if (kDebugMode) print('[Stereo98] Sync iscrizioni show: ${iscrizioni.length}');
     } catch (e) {
       if (kDebugMode) print('[Stereo98] fetchNotificheShow error: $e');
