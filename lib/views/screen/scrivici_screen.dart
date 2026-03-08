@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../utils/custom_color.dart';
 
@@ -96,8 +97,11 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
             .add(await http.MultipartFile.fromPath('foto', _foto!.path));
       }
       if (_audio != null) {
-        request.files
-            .add(await http.MultipartFile.fromPath('audio', _audio!.path));
+        request.files.add(await http.MultipartFile.fromPath(
+          'audio',
+          _audio!.path,
+          contentType: MediaType('audio', 'mp4'),
+        ));
       }
 
       final response =
