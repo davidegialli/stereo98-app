@@ -70,11 +70,15 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         centerTitle: true,
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1A0A10), Color(0xFF000000), Color(0xFF0A0A1A)],
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).cardColor,
+              Theme.of(context).canvasColor,
+            ],
           ),
         ),
         child: Column(
