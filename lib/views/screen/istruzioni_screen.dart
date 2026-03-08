@@ -117,10 +117,10 @@ class IstruzioniScreen extends StatelessWidget {
             ),
             _buildSection(
               icon: Icons.mail_outline,
-              title: '8. Scrivici',
+              title: '8. Contattaci',
               items: [
                 'Apri il menu laterale (☰ in alto a sinistra)',
-                'Tocca 📨 Scrivici',
+                'Tocca 📨 Contattaci',
                 'Inserisci il tuo nome e il messaggio',
                 'L\'email è opzionale — inseriscila se vuoi ricevere una risposta',
                 'Tocca Invia messaggio e la redazione lo riceverà!',
@@ -192,7 +192,7 @@ class IstruzioniScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Hai altri dubbi? Scrivici direttamente dall\'app!',
+                    'Hai altri dubbi? Contattaci direttamente dall\'app!',
                     style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
