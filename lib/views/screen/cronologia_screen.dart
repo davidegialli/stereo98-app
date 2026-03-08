@@ -42,9 +42,10 @@ class CronologiaScreen extends StatelessWidget {
     final controller = Get.find<HomeController>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -84,11 +85,15 @@ class CronologiaScreen extends StatelessWidget {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1A0A10), Color(0xFF000000), Color(0xFF0A0A1A)],
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).cardColor,
+              Theme.of(context).canvasColor,
+            ],
           ),
         ),
         child: Obx(() {

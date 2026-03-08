@@ -26,7 +26,7 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
