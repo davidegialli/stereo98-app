@@ -88,17 +88,35 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   final dark = ThemeData.dark();
   final themeCollection = ThemeCollection(themes: {
-    AppThemes.light: ThemeData(
-      primaryColor: CustomColor.primaryColor,
-      scaffoldBackgroundColor: CustomColor.primaryColor,
-      cardColor: CustomColor.primaryColorOne,
-      canvasColor: CustomColor.primaryColorTwo,
+    AppThemes.vivace: ThemeData(
+      primaryColor: CustomColor.vivacePrimary,
+      scaffoldBackgroundColor: CustomColor.vivacePrimary,
+      cardColor: CustomColor.vivaceCard,
+      canvasColor: CustomColor.vivaceCanvas,
     ),
-    AppThemes.dark: ThemeData(
+    AppThemes.scuro: ThemeData(
       primaryColor: CustomColor.darkPrimaryColor,
       scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
       cardColor: CustomColor.darkPrimaryColorOne,
       canvasColor: CustomColor.darkPrimaryColorTwo,
+    ),
+    AppThemes.auto: ThemeData(
+      primaryColor: CustomColor.darkPrimaryColor,
+      scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
+      cardColor: CustomColor.darkPrimaryColorOne,
+      canvasColor: CustomColor.darkPrimaryColorTwo,
+    ),
+    AppThemes.bluNotte: ThemeData(
+      primaryColor: CustomColor.bluNottePrimary,
+      scaffoldBackgroundColor: CustomColor.bluNottePrimary,
+      cardColor: CustomColor.bluNotteCard,
+      canvasColor: CustomColor.bluNotteCanvas,
+    ),
+    AppThemes.amaranto: ThemeData(
+      primaryColor: CustomColor.amarantoPrimary,
+      scaffoldBackgroundColor: CustomColor.amarantoPrimary,
+      cardColor: CustomColor.amarantoCard,
+      canvasColor: CustomColor.amarantoCanvas,
     ),
   });
 
@@ -122,20 +140,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
       final effectiveTheme = brightness == Brightness.dark
-          ? AppThemes.dark
-          : AppThemes.light;
+          ? AppThemes.scuro
+          : AppThemes.vivace;
       DynamicTheme.of(context)?.setTheme(effectiveTheme);
     }
   }
 
   int _getInitialTheme() {
     final savedMode = _box.read('stereo98_theme_mode') ?? 0;
-    if (savedMode == AppThemes.auto) {
-      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      return brightness == Brightness.dark ? AppThemes.dark : AppThemes.light;
-    }
-    if (savedMode == AppThemes.dark) return AppThemes.dark;
-    return AppThemes.light;
+    if (savedMode == AppThemes.auto)     return AppThemes.scuro;
+    if (savedMode == AppThemes.scuro)    return AppThemes.scuro;
+    if (savedMode == AppThemes.bluNotte) return AppThemes.bluNotte;
+    if (savedMode == AppThemes.amaranto) return AppThemes.amaranto;
+    return AppThemes.vivace;
   }
 
   @override

@@ -1,18 +1,22 @@
 class AppThemes {
-  static const int light = 0;
-  static const int dark = 1;
-  static const int auto = 2;
+  static const int scuro    = 1; // Dark (nero profondo)
+  static const int vivace   = 0; // Vivace (azzurro-fucsia, brand puro)
+  static const int auto     = 2; // Automatico
+  static const int bluNotte = 3; // Blu Notte (navy flat)
+  static const int amaranto = 4; // Amaranto (vino/fucsia profondo)
+
+  // retrocompatibilità alias
+  static const int light = vivace;
+  static const int dark  = scuro;
 
   static String toStr(int themeId) {
     switch (themeId) {
-      case light:
-        return "Light";
-      case dark:
-        return "Dark";
-      case auto:
-        return "Automatico";
-      default:
-        return "Unknown";
+      case vivace:   return "Vivace";
+      case scuro:    return "Scuro";
+      case auto:     return "Automatico";
+      case bluNotte: return "Blu Notte";
+      case amaranto: return "Amaranto";
+      default:       return "Scuro";
     }
   }
 }

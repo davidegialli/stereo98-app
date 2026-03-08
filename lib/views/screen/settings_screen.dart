@@ -35,16 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
     setState(() => dropdownValue = themeId);
-
-    if (themeId == AppThemes.auto) {
-      final brightness = MediaQuery.of(context).platformBrightness;
-      final effectiveTheme = brightness == Brightness.dark
-          ? AppThemes.dark
-          : AppThemes.light;
-      DynamicTheme.of(context)!.setTheme(effectiveTheme);
-    } else {
-      DynamicTheme.of(context)!.setTheme(themeId);
-    }
+    DynamicTheme.of(context)!.setTheme(themeId);
   }
 
   @override
@@ -103,28 +94,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: dropdownValue,
                         items: [
                           DropdownMenuItem(
-                            value: AppThemes.light,
-                            child: Text(
-                              AppThemes.toStr(AppThemes.light),
-                              style:
-                                  CustomStyler.settingsScreenDropDownTextStyle,
-                            ),
+                            value: AppThemes.scuro,
+                            child: Text(AppThemes.toStr(AppThemes.scuro),
+                              style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
-                            value: AppThemes.dark,
-                            child: Text(
-                              AppThemes.toStr(AppThemes.dark),
-                              style:
-                                  CustomStyler.settingsScreenDropDownTextStyle,
-                            ),
+                            value: AppThemes.vivace,
+                            child: Text(AppThemes.toStr(AppThemes.vivace),
+                              style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
-                            value: AppThemes.auto,
-                            child: Text(
-                              AppThemes.toStr(AppThemes.auto),
-                              style:
-                                  CustomStyler.settingsScreenDropDownTextStyle,
-                            ),
+                            value: AppThemes.bluNotte,
+                            child: Text(AppThemes.toStr(AppThemes.bluNotte),
+                              style: CustomStyler.settingsScreenDropDownTextStyle),
+                          ),
+                          DropdownMenuItem(
+                            value: AppThemes.amaranto,
+                            child: Text(AppThemes.toStr(AppThemes.amaranto),
+                              style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                         ],
                         onChanged: (dynamic themeId) {
