@@ -112,7 +112,7 @@ class DrawerScreen extends StatelessWidget {
           onPressed: () => Get.toNamed(Routes.sondaggiScreen),
         ),
         MenuItemWidget(
-          screenName: 'Scrivici',
+          screenName: 'Contattaci',
           icon: Icons.mail_outline,
           onPressed: () => Get.toNamed(Routes.scriviciScreen),
         ),

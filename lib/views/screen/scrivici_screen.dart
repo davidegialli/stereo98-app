@@ -119,8 +119,7 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
     final fieldFill = Colors.black.withOpacity(0.15);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         backgroundColor: bgTop,
         elevation: 0,

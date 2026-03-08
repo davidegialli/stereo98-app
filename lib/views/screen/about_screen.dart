@@ -33,8 +33,7 @@ class _AboutScreenState extends State<AboutScreen> {
     final logoSize = (MediaQuery.of(context).size.shortestSide * 0.35).clamp(100.0, 160.0);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,

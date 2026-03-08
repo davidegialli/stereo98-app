@@ -35,7 +35,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
     setState(() => dropdownValue = themeId);
-    DynamicTheme.of(context)!.setTheme(themeId);
+    if (themeId == AppThemes.auto) {
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final effectiveTheme = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.vivace;
+      DynamicTheme.of(context)!.setTheme(effectiveTheme);
+    } else {
+      DynamicTheme.of(context)!.setTheme(themeId);
+    }
   }
 
   @override
@@ -111,6 +117,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           DropdownMenuItem(
                             value: AppThemes.amaranto,
                             child: Text(AppThemes.toStr(AppThemes.amaranto),
+                              style: CustomStyler.settingsScreenDropDownTextStyle),
+                          ),
+                          DropdownMenuItem(
+                            value: AppThemes.auto,
+                            child: Text(AppThemes.toStr(AppThemes.auto),
                               style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                         ],

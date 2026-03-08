@@ -18,10 +18,10 @@ class CustomColor {
   static const Color darkPrimaryColorOne = Color(0xFF111111);
   static const Color darkPrimaryColorTwo = Color(0xFF0D1A26);
 
-  // Tema 2 — Vivace (colori logo diretti: azzurro → fucsia → azzurro)
-  static const Color vivacePrimary  = Color(0xFF4EC8E8);
-  static const Color vivaceCard     = Color(0xFFD85D9D);
-  static const Color vivaceCanvas   = Color(0xFF4EC8E8);
+  // Tema 2 — Vivace (ispirato al logo: azzurro scuro → viola-fucsia → blu profondo)
+  static const Color vivacePrimary  = Color(0xFF0D4A5E); // azzurro scuro
+  static const Color vivaceCard     = Color(0xFF5C1A4A); // fucsia scuro
+  static const Color vivaceCanvas   = Color(0xFF1A0A3E); // blu-viola profondo
 
   // Tema 3 — Blu Notte (navy flat, elegante)
   static const Color bluNottePrimary = Color(0xFF071428);
