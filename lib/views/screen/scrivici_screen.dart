@@ -106,24 +106,18 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
 
       final response =
           await request.send().timeout(const Duration(seconds: 30));
-      final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        // DEBUG TEMPORANEO - mostra risposta server
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A1A),
-            title: const Text('Debug risposta', style: TextStyle(color: Colors.white, fontSize: 14)),
-            content: SingleChildScrollView(
-              child: Text(responseBody, style: const TextStyle(color: Colors.white70, fontSize: 11)),
-            ),
-            actions: [
-              TextButton(onPressed: () { Get.back(); Get.back(); }, child: const Text('OK', style: TextStyle(color: Color(0xFFD85D9D)))),
-            ],
-          ),
+        Get.back();
+        Get.snackbar(
+          'Inviato! 🎉',
+          'Il tuo messaggio è stato inviato con successo',
+          backgroundColor: const Color(0xFFD85D9D),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
         );
       } else {
+        final responseBody = await response.stream.bytesToString();
         throw Exception('Errore server: ${response.statusCode} - $responseBody');
       }
     } catch (e) {
