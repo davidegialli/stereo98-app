@@ -132,7 +132,7 @@ class HomeController extends GetxController {
     getPalinsesto();
     getRds();
 
-    timer = Timer.periodic(const Duration(seconds: 10), (t) => getNowPlaying());
+    timer = Timer.periodic(const Duration(seconds: 5), (t) => getNowPlaying());
     _palinsestoTimer = Timer.periodic(const Duration(seconds: 30), (t) => getPalinsesto());
     _rdsTimer = Timer.periodic(const Duration(seconds: 30), (t) => getRds());
     _premioCheckTimer = Timer.periodic(const Duration(seconds: 60), (t) => getFanProfile());
@@ -834,9 +834,16 @@ class HomeController extends GetxController {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes));
-        String title = 'Stereo 98 DAB+';
-        String artist = 'In diretta';
+        // Prova UTF-8, fallback latin1 (RadioBOSS a volte invia metadati in latin1)
+        String bodyStr;
+        try {
+          bodyStr = utf8.decode(response.bodyBytes);
+        } catch (_) {
+          bodyStr = latin1.decode(response.bodyBytes);
+        }
+        final data = json.decode(bodyStr);
+        String title = '';
+        String artist = '';
 
         if (data['icestats'] != null && data['icestats']['source'] != null) {
           final source = data['icestats']['source'];
@@ -859,28 +866,32 @@ class HomeController extends GetxController {
         final newTitle = _fixEncoding(title);
         final newArtist = _fixEncoding(artist);
 
-        if (newTitle.isNotEmpty &&
-            (titleValue.value != newTitle || artistValue.value != newArtist)) {
-          _refreshArtworkWithFade();
-          _artworkTs = DateTime.now().millisecondsSinceEpoch;
-
-          titleValue.value = newTitle;
-          artistValue.value = newArtist;
-
-          // 📻 Salva in cronologia
-          _saveToCronologia(newArtist, newTitle);
-
-          // Aggiorna subito titolo/artista nella notifica
-          _updateNotification();
-
-          // Dopo 2s aggiorna di nuovo con artwork fresca (RadioBOSS ha ritardo)
-          Future.delayed(const Duration(seconds: 2), () {
+        if (newTitle.isNotEmpty) {
+          if (titleValue.value != newTitle || artistValue.value != newArtist) {
+            _refreshArtworkWithFade();
             _artworkTs = DateTime.now().millisecondsSinceEpoch;
-            _updateNotification();
-          });
 
-          _checkIfCurrentSongFavorited();
-          _checkIfCurrentSongVoted();
+            titleValue.value = newTitle;
+            artistValue.value = newArtist;
+
+            // 📻 Salva in cronologia
+            _saveToCronologia(newArtist, newTitle);
+
+            // Aggiorna subito titolo/artista nella notifica
+            _updateNotification();
+
+            // Dopo 2s aggiorna di nuovo con artwork fresca (RadioBOSS ha ritardo)
+            Future.delayed(const Duration(seconds: 2), () {
+              _artworkTs = DateTime.now().millisecondsSinceEpoch;
+              _updateNotification();
+            });
+
+            _checkIfCurrentSongFavorited();
+            _checkIfCurrentSongVoted();
+          }
+        } else {
+          // Titolo vuoto → riprova dopo 3s (RadioBOSS ancora in aggiornamento)
+          Future.delayed(const Duration(seconds: 3), () => getNowPlaying());
         }
 
         update();
