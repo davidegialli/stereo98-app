@@ -34,10 +34,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
+    // Se è un tema scuro (non auto, non vivace) lo salva come preferito per l'auto
+    if (themeId != AppThemes.auto && themeId != AppThemes.vivace) {
+      _box.write('stereo98_dark_theme', themeId);
+    }
     setState(() => dropdownValue = themeId);
     if (themeId == AppThemes.auto) {
       final brightness = MediaQuery.of(context).platformBrightness;
-      final effectiveTheme = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.vivace;
+      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
       DynamicTheme.of(context)!.setTheme(effectiveTheme);
     } else {
       DynamicTheme.of(context)!.setTheme(themeId);

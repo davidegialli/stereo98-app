@@ -139,16 +139,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final savedMode = _box.read('stereo98_theme_mode') ?? 0;
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final effectiveTheme = brightness == Brightness.dark
-          ? AppThemes.scuro
-          : AppThemes.vivace;
+      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
       DynamicTheme.of(context)?.setTheme(effectiveTheme);
     }
   }
 
   int _getInitialTheme() {
     final savedMode = _box.read('stereo98_theme_mode') ?? 0;
-    if (savedMode == AppThemes.auto)     return AppThemes.scuro;
+    if (savedMode == AppThemes.auto) {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      return brightness == Brightness.dark ? savedDark : AppThemes.vivace;
+    }
     if (savedMode == AppThemes.scuro)    return AppThemes.scuro;
     if (savedMode == AppThemes.bluNotte) return AppThemes.bluNotte;
     if (savedMode == AppThemes.amaranto) return AppThemes.amaranto;
