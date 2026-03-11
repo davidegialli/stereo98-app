@@ -834,11 +834,10 @@ class HomeController extends GetxController {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        // Prova UTF-8, fallback latin1 (RadioBOSS a volte invia metadati in latin1)
-        String bodyStr;
-        try {
-          bodyStr = utf8.decode(response.bodyBytes);
-        } catch (_) {
+        // Decodifica: UTF-8 di default, fallback latin1 solo se il risultato contiene artefatti
+        String bodyStr = utf8.decode(response.bodyBytes, allowMalformed: true);
+        // Se contiene artefatti tipici di latin1-interpretato-come-utf8, riprova con latin1
+        if (bodyStr.contains('Â') || bodyStr.contains('Ã') || bodyStr.contains('\u00c3') || bodyStr.contains('\u00c2')) {
           bodyStr = latin1.decode(response.bodyBytes);
         }
         final data = json.decode(bodyStr);
