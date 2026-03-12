@@ -569,31 +569,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
         const SizedBox(width: 14),
 
-        // ⭐ STELLA — voto chart, solo con play attivo
+        // ⭐ STELLA — voto chart, solo su canzoni (non dirette/programmi)
         Obx(() {
           final playActive = _controller.isPressed.value;
           final voted = _controller.currentSongVoted.value;
+          final artista = _controller.artistValue.value;
+          final titolo = _controller.titleValue.value;
+          // È una canzone se: play attivo, artista reale, e il titolo non è un programma del palinsesto
+          final isShowTitle = _controller.allShowNames.contains(titolo.trim().toLowerCase());
+          final isSong = playActive &&
+              artista.isNotEmpty &&
+              artista != 'Stereo 98 DAB+' &&
+              artista != 'In diretta' &&
+              !isShowTitle;
           return GestureDetector(
-            onTap: playActive ? () => _controller.toggleVote() : null,
+            onTap: isSong ? () => _controller.toggleVote() : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: 44, height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: voted
+                color: voted && isSong
                   ? const Color(0xFFFFD700).withOpacity(0.2)
-                  : Colors.white.withOpacity(playActive ? 0.08 : 0.03),
+                  : Colors.white.withOpacity(isSong ? 0.08 : 0.03),
                 border: Border.all(
-                  color: voted
+                  color: voted && isSong
                     ? const Color(0xFFFFD700).withOpacity(0.6)
-                    : Colors.white.withOpacity(playActive ? 0.2 : 0.08),
+                    : Colors.white.withOpacity(isSong ? 0.2 : 0.08),
                 ),
               ),
               child: Icon(
-                voted ? Icons.star : Icons.star_border,
-                color: voted
+                voted && isSong ? Icons.star : Icons.star_border,
+                color: voted && isSong
                   ? const Color(0xFFFFD700)
-                  : (playActive ? Colors.white54 : Colors.white24),
+                  : (isSong ? Colors.white54 : Colors.white24),
                 size: 22,
               ),
             ),

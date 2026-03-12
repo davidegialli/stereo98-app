@@ -32,6 +32,7 @@ class HomeController extends GetxController {
   var titleValue = ''.obs;
   var artistValue = ''.obs;
   var showName = ''.obs;
+  var allShowNames = <String>{}.obs; // tutti i nomi programmi dal palinsesto
   var showImage = ''.obs;
   var showDescription = ''.obs;
   var nextShowName = ''.obs;
@@ -416,6 +417,18 @@ class HomeController extends GetxController {
   }
 
   bool isPalinsestoFavorite(String showKey) {
+    // showKey può essere nome|weekday|start oppure nome|start
+    // Controlla se esiste qualunque chiave con stesso nome e stesso orario (ignora weekday)
+    final parts = showKey.split('|');
+    if (parts.length == 3) {
+      // formato nome|weekday|start — ignora weekday
+      final nome = parts[0];
+      final start = parts[2];
+      return palinsestoFavorites.any((k) {
+        final kp = k.split('|');
+        return kp.length >= 3 && kp[0] == nome && kp[2] == start;
+      });
+    }
     return palinsestoFavorites.contains(showKey);
   }
 
@@ -426,9 +439,23 @@ class HomeController extends GetxController {
     required String startTime,
     required int showId,
   }) {
-    if (palinsestoFavorites.contains(showKey)) {
-      palinsestoFavorites.remove(showKey);
-      palinsestoShowIds.remove(showKey);
+    // Controlla se esiste già su qualsiasi giorno (stesso nome + stesso orario)
+    final parts = showKey.split('|');
+    final nome = parts[0];
+    final start = parts.length >= 3 ? parts[2] : startTime;
+    final existingKeys = palinsestoFavorites
+        .where((k) {
+          final kp = k.split('|');
+          return kp.length >= 3 && kp[0] == nome && kp[2] == start;
+        })
+        .toList();
+
+    if (existingKeys.isNotEmpty) {
+      // Rimuove tutte le chiavi per questo show (tutti i giorni)
+      for (final k in existingKeys) {
+        palinsestoFavorites.remove(k);
+        palinsestoShowIds.remove(k);
+      }
       _apiToggleNotificaShow(showId: showId, showName: showName, attiva: false);
     } else {
       palinsestoFavorites.add(showKey);
@@ -919,6 +946,7 @@ class HomeController extends GetxController {
           if (dayIndex < palinsesto.length) {
             final giorno = palinsesto[dayIndex];
             final shows = giorno['shows'] as List? ?? [];
+            for (final s in shows) { final n = s['show_nome']?.toString().trim().toLowerCase(); if (n != null && n.isNotEmpty) allShowNames.add(n); }
             bool foundCurrent = false;
 
             for (int i = 0; i < shows.length; i++) {
