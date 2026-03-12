@@ -15,3 +15,14 @@
 
 # Flutter local notifications â€” non toccare nulla del plugin
 -keep class com.dexterous.** { *; }
+
+# OpenTelemetry — classi mancanti segnalate da R8
+-dontwarn io.opentelemetry.**
+-keep class io.opentelemetry.** { *; }
+
+# Jackson — usato da OpenTelemetry exporter
+-dontwarn com.fasterxml.jackson.**
+-keep class com.fasterxml.jackson.** { *; }
+
+# AutoValue — usato da OpenTelemetry SDK
+-dontwarn com.google.auto.value.**
