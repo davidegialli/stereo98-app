@@ -54,9 +54,6 @@
             android:value="2" />
         <!-- OneSignal: icona notifica -->
         <meta-data
-            android:name="com.onesignal.NotificationServiceExtension"
-            android:value="com.stereo98.dabplus.NotificationServiceExtension" />
-        <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />
         <meta-data

@@ -48,6 +48,10 @@ android {
         targetSdkVersion 35
         versionCode flutterVersionCode
         versionName flutterVersionName
+        manifestPlaceholders = [
+            'onesignal_app_id': '3e87897b-47fb-4389-9efe-9b99ecc6949d',
+            'onesignal_notification_icon_name': 'ic_notification'
+        ]
     }
     signingConfigs {
         release {
