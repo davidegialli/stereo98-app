@@ -575,13 +575,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           final voted = _controller.currentSongVoted.value;
           final artista = _controller.artistValue.value;
           final titolo = _controller.titleValue.value;
-          // È una canzone se: play attivo, artista reale, e il titolo non è un programma del palinsesto
-          final isShowTitle = _controller.allShowNames.contains(titolo.trim().toLowerCase());
+          final titoloLow = titolo.trim().toLowerCase();
+          final artistaLow = artista.trim().toLowerCase();
+          final isShowTitle = _controller.allShowNames.contains(titoloLow);
+          final isNotSongKeyword = ['programma', 'news', 'spot', 'stereo 98 live', 'notizie']
+              .any((w) => titoloLow.contains(w) || artistaLow.contains(w));
           final isSong = playActive &&
               artista.isNotEmpty &&
               artista != 'Stereo 98 DAB+' &&
               artista != 'In diretta' &&
-              !isShowTitle;
+              !isShowTitle &&
+              !isNotSongKeyword;
           return GestureDetector(
             onTap: isSong ? () => _controller.toggleVote() : null,
             child: AnimatedContainer(
