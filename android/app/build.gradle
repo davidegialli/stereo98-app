@@ -49,6 +49,7 @@ android {
         versionCode flutterVersionCode
         versionName flutterVersionName
         manifestPlaceholders = [
+            'applicationName': 'io.flutter.app.FlutterApplication',
             'onesignal_app_id': '3e87897b-47fb-4389-9efe-9b99ecc6949d',
             'onesignal_notification_icon_name': 'ic_notification'
         ]
