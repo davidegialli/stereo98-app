@@ -82,7 +82,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
 
@@ -123,26 +123,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     initialConfig();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangePlatformBrightness() {
-    // Aggiorna tema se è in modalità auto
-    final savedMode = _box.read('stereo98_theme_mode') ?? 0;
-    if (savedMode == AppThemes.auto) {
-      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
-      DynamicTheme.of(context)?.setTheme(effectiveTheme);
-    }
   }
 
   int _getInitialTheme() {
@@ -166,7 +147,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           themeCollection: themeCollection,
           defaultThemeId: _getInitialTheme(),
           builder: (context, theme) {
-            return GetMaterialApp(
+            return _AutoThemeListener(box: _box, child: GetMaterialApp(
               builder: (context, widget) {
                 return MediaQuery(
                   data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
@@ -184,7 +165,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               navigatorKey: Get.key,
               initialRoute: Routes.splashScreen,
               getPages: Routes.list,
-            );
+            ));
           }),
     );
   }

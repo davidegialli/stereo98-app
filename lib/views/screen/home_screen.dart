@@ -578,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           final titoloLow = titolo.trim().toLowerCase();
           final artistaLow = artista.trim().toLowerCase();
           final isShowTitle = _controller.allShowNames.contains(titoloLow);
-          final isNotSongKeyword = ['programma', 'news', 'spot', 'stereo 98 live', 'notizie']
+          final isNotSongKeyword = ['programma', 'news', 'spot', 'stereo 98 live', 'live stereo 98', 'notizie']
               .any((w) => titoloLow.contains(w) || artistaLow.contains(w));
           final isSong = playActive &&
               artista.isNotEmpty &&
