@@ -170,3 +170,43 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
+// Widget che ascolta i cambi di brightness del sistema e aggiorna il tema auto
+class _AutoThemeListener extends StatefulWidget {
+  final GetStorage box;
+  final Widget child;
+  const _AutoThemeListener({required this.box, required this.child});
+
+  @override
+  State<_AutoThemeListener> createState() => _AutoThemeListenerState();
+}
+
+class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final savedMode = widget.box.read('stereo98_theme_mode') ?? 0;
+    if (savedMode == AppThemes.auto) {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      final savedDark = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        DynamicTheme.of(context)?.setTheme(effectiveTheme);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
