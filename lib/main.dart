@@ -85,6 +85,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
+  late final ValueNotifier<int> _themeNotifier;
 
   final dark = ThemeData.dark();
   final themeCollection = ThemeCollection(themes: {
@@ -123,7 +124,14 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _themeNotifier = ValueNotifier<int>(_getInitialTheme());
     initialConfig();
+  }
+
+  @override
+  void dispose() {
+    _themeNotifier.dispose();
+    super.dispose();
   }
 
   int _getInitialTheme() {
@@ -147,7 +155,7 @@ class _MyAppState extends State<MyApp> {
           themeCollection: themeCollection,
           defaultThemeId: _getInitialTheme(),
           builder: (context, theme) {
-            return _AutoThemeListener(box: _box, child: GetMaterialApp(
+            return _AutoThemeListener(box: _box, themeNotifier: _themeNotifier, child: GetMaterialApp(
               builder: (context, widget) {
                 return MediaQuery(
                   data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
@@ -167,6 +175,7 @@ class _MyAppState extends State<MyApp> {
               getPages: Routes.list,
             ));
           }),
+          ),
     );
   }
 }
@@ -174,8 +183,9 @@ class _MyAppState extends State<MyApp> {
 // Widget che ascolta i cambi di brightness del sistema e aggiorna il tema auto
 class _AutoThemeListener extends StatefulWidget {
   final GetStorage box;
+  final ValueNotifier<int> themeNotifier;
   final Widget child;
-  const _AutoThemeListener({required this.box, required this.child});
+  const _AutoThemeListener({required this.box, required this.themeNotifier, required this.child});
 
   @override
   State<_AutoThemeListener> createState() => _AutoThemeListenerState();
@@ -201,9 +211,8 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
       final savedDark = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
       final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        DynamicTheme.of(context)?.setTheme(effectiveTheme);
-      });
+      // Aggiorna il ValueNotifier — forza rebuild dell'intera app con il tema giusto
+      widget.themeNotifier.value = effectiveTheme;
     }
   }
 
