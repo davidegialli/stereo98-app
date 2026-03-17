@@ -151,31 +151,38 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(414, 896),
-      builder: (_, child) => DynamicTheme(
+      builder: (_, child) => ValueListenableBuilder<int>(
+        valueListenable: _themeNotifier,
+        builder: (context, themeId, _) => DynamicTheme(
           themeCollection: themeCollection,
-          defaultThemeId: _getInitialTheme(),
+          defaultThemeId: themeId,
           builder: (context, theme) {
-            return _AutoThemeListener(box: _box, themeNotifier: _themeNotifier, child: GetMaterialApp(
-              builder: (context, widget) {
-                return MediaQuery(
-                  data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-                  child: widget!,
-                );
-              },
-              translations: AppTranslations(),
-              locale: storage.languageCode != null
-                  ? Locale(storage.languageCode!, storage.countryCode)
-                  : const Locale('it', 'IT'),
-              fallbackLocale: const Locale('it', 'IT'),
-              title: Strings.oneRadio,
-              debugShowCheckedModeBanner: false,
-              theme: theme,
-              navigatorKey: Get.key,
-              initialRoute: Routes.splashScreen,
-              getPages: Routes.list,
-            ));
-          }),
-          ),
+            return _AutoThemeListener(
+              box: _box,
+              themeNotifier: _themeNotifier,
+              child: GetMaterialApp(
+                builder: (context, widget) {
+                  return MediaQuery(
+                    data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                    child: widget!,
+                  );
+                },
+                translations: AppTranslations(),
+                locale: storage.languageCode != null
+                    ? Locale(storage.languageCode!, storage.countryCode)
+                    : const Locale('it', 'IT'),
+                fallbackLocale: const Locale('it', 'IT'),
+                title: Strings.oneRadio,
+                debugShowCheckedModeBanner: false,
+                theme: theme,
+                navigatorKey: Get.key,
+                initialRoute: Routes.splashScreen,
+                getPages: Routes.list,
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
