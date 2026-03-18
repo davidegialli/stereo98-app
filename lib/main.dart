@@ -89,7 +89,7 @@ class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
   final dark = ThemeData.dark();
-  final themeCollection = ThemeCollection(themes: {
+  final themeMap = <int, ThemeData>{
     AppThemes.vivace: ThemeData(
       primaryColor: CustomColor.vivacePrimary,
       scaffoldBackgroundColor: CustomColor.vivacePrimary,
@@ -133,7 +133,7 @@ class _MyAppState extends State<MyApp> {
         bodySmall:  TextStyle(color: Color(0xFF1A1A1A)),
       ),
     ),
-  });
+  };
 
   @override
   void initState() {
@@ -166,7 +166,7 @@ class _MyAppState extends State<MyApp> {
         child: ValueListenableBuilder<int>(
           valueListenable: appThemeNotifier,
           builder: (context, themeId, _) {
-            final theme = themeCollection.themes[themeId] ?? themeCollection.themes[AppThemes.scuro]!;
+            final theme = themeMap[themeId] ?? themeMap[AppThemes.scuro]!;
             return GetMaterialApp(
               builder: (context, widget) {
                 return MediaQuery(
