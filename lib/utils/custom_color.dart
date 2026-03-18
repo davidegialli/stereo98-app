@@ -28,6 +28,13 @@ class CustomColor {
   static const Color bluNotteCard    = Color(0xFF0A1A35);
   static const Color bluNotteCanvas  = Color(0xFF0D2040);
 
+
+  // Tema 5 — Chiaro (bianco, testo scuro)
+  static const Color chiaroPrimary = Color(0xFFFFFFFF);
+  static const Color chiaroCard    = Color(0xFFF5F5F5);
+  static const Color chiaroCanvas  = Color(0xFFEEEEEE);
+  static const Color chiaroText    = Color(0xFF1A1A1A);
+
   // Tema 4 — Amaranto (vino/fucsia profondo, complementare al rosa logo)
   static const Color amarantoPrimary = Color(0xFF1E0714);
   static const Color amarantoCard    = Color(0xFF2D0F1E);

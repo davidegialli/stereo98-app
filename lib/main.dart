@@ -19,6 +19,9 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:stereo98/services/notification_service.dart';
    
     
+// Notifier globale per il tema — accessibile da settings_screen
+final appThemeNotifier = ValueNotifier<int>(0);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -85,8 +88,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
-  late final ValueNotifier<int> _themeNotifier;
-
   final dark = ThemeData.dark();
   final themeCollection = ThemeCollection(themes: {
     AppThemes.vivace: ThemeData(
@@ -119,66 +120,71 @@ class _MyAppState extends State<MyApp> {
       cardColor: CustomColor.amarantoCard,
       canvasColor: CustomColor.amarantoCanvas,
     ),
+    AppThemes.chiaro: ThemeData(
+      primaryColor: CustomColor.chiaroPrimary,
+      scaffoldBackgroundColor: CustomColor.chiaroPrimary,
+      cardColor: CustomColor.chiaroCard,
+      canvasColor: CustomColor.chiaroCanvas,
+      brightness: Brightness.light,
+      iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
+      textTheme: const TextTheme(
+        bodyLarge:  TextStyle(color: Color(0xFF1A1A1A)),
+        bodyMedium: TextStyle(color: Color(0xFF1A1A1A)),
+        bodySmall:  TextStyle(color: Color(0xFF1A1A1A)),
+      ),
+    ),
   });
 
   @override
   void initState() {
     super.initState();
-    _themeNotifier = ValueNotifier<int>(_getInitialTheme());
+    appThemeNotifier.value = _getInitialTheme();
     initialConfig();
   }
 
   @override
   void dispose() {
-    _themeNotifier.dispose();
     super.dispose();
   }
 
   int _getInitialTheme() {
-    final savedMode = _box.read('stereo98_theme_mode') ?? 0;
+    final savedMode = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      return brightness == Brightness.dark ? savedDark : AppThemes.vivace;
+      return brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
     }
-    if (savedMode == AppThemes.scuro)    return AppThemes.scuro;
-    if (savedMode == AppThemes.bluNotte) return AppThemes.bluNotte;
-    if (savedMode == AppThemes.amaranto) return AppThemes.amaranto;
-    return AppThemes.vivace;
+    return savedMode;
   }
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(414, 896),
-      builder: (_, child) => ValueListenableBuilder<int>(
-        valueListenable: _themeNotifier,
-        builder: (context, themeId, _) => DynamicTheme(
-          themeCollection: themeCollection,
-          defaultThemeId: themeId,
-          builder: (context, theme) {
-            return _AutoThemeListener(
-              box: _box,
-              themeNotifier: _themeNotifier,
-              child: GetMaterialApp(
-                builder: (context, widget) {
-                  return MediaQuery(
-                    data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-                    child: widget!,
-                  );
-                },
-                translations: AppTranslations(),
-                locale: storage.languageCode != null
-                    ? Locale(storage.languageCode!, storage.countryCode)
-                    : const Locale('it', 'IT'),
-                fallbackLocale: const Locale('it', 'IT'),
-                title: Strings.oneRadio,
-                debugShowCheckedModeBanner: false,
-                theme: theme,
-                navigatorKey: Get.key,
-                initialRoute: Routes.splashScreen,
-                getPages: Routes.list,
-              ),
+      builder: (_, child) => _AutoThemeListener(
+        box: _box,
+        themeNotifier: appThemeNotifier,
+        child: ValueListenableBuilder<int>(
+          valueListenable: appThemeNotifier,
+          builder: (context, themeId, _) {
+            final theme = themeCollection.themes[themeId] ?? themeCollection.themes[AppThemes.scuro]!;
+            return GetMaterialApp(
+              builder: (context, widget) {
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                  child: widget!,
+                );
+              },
+              translations: AppTranslations(),
+              locale: storage.languageCode != null
+                  ? Locale(storage.languageCode!, storage.countryCode)
+                  : const Locale('it', 'IT'),
+              fallbackLocale: const Locale('it', 'IT'),
+              title: Strings.oneRadio,
+              debugShowCheckedModeBanner: false,
+              theme: theme,
+              navigatorKey: Get.key,
+              initialRoute: Routes.splashScreen,
+              getPages: Routes.list,
             );
           },
         ),
@@ -187,7 +193,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Widget che ascolta i cambi di brightness del sistema e aggiorna il tema auto
+
 class _AutoThemeListener extends StatefulWidget {
   final GetStorage box;
   final ValueNotifier<int> themeNotifier;
@@ -216,10 +222,7 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
     final savedMode = widget.box.read('stereo98_theme_mode') ?? 0;
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final savedDark = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
-      // Aggiorna il ValueNotifier — forza rebuild dell'intera app con il tema giusto
-      widget.themeNotifier.value = effectiveTheme;
+      widget.themeNotifier.value = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
     }
   }
 

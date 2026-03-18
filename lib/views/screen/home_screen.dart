@@ -573,19 +573,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         Obx(() {
           final playActive = _controller.isPressed.value;
           final voted = _controller.currentSongVoted.value;
-          final artista = _controller.artistValue.value;
-          final titolo = _controller.titleValue.value;
-          final titoloLow = titolo.trim().toLowerCase();
-          final artistaLow = artista.trim().toLowerCase();
-          final isShowTitle = _controller.allShowNames.contains(titoloLow);
-          final isNotSongKeyword = ['programma', 'news', 'spot', 'stereo 98 live', 'live stereo 98', 'notizie']
-              .any((w) => titoloLow.contains(w) || artistaLow.contains(w));
-          final isSong = playActive &&
-              artista.isNotEmpty &&
-              artista != 'Stereo 98 DAB+' &&
-              artista != 'In diretta' &&
-              !isShowTitle &&
-              !isNotSongKeyword;
+          final isSong = playActive;
           return GestureDetector(
             onTap: isSong ? () => _controller.toggleVote() : null,
             child: AnimatedContainer(

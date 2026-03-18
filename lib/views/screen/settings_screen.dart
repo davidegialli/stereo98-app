@@ -1,3 +1,4 @@
+import 'package:stereo98/main.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _box = GetStorage();
 
   // 0=light, 1=dark, 2=auto
-  int dropdownValue = 0;
+  int dropdownValue = AppThemes.scuro;
 
   @override
   void initState() {
@@ -34,18 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
-    // Se è un tema scuro (non auto, non vivace) lo salva come preferito per l'auto
-    if (themeId != AppThemes.auto && themeId != AppThemes.vivace) {
-      _box.write('stereo98_dark_theme', themeId);
-    }
     setState(() => dropdownValue = themeId);
     if (themeId == AppThemes.auto) {
       final brightness = MediaQuery.of(context).platformBrightness;
-      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.vivace;
-      DynamicTheme.of(context)!.setTheme(effectiveTheme);
+      appThemeNotifier.value = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
     } else {
-      DynamicTheme.of(context)!.setTheme(themeId);
+      appThemeNotifier.value = themeId;
     }
   }
 
@@ -105,13 +100,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: dropdownValue,
                         items: [
                           DropdownMenuItem(
-                            value: AppThemes.scuro,
-                            child: Text(AppThemes.toStr(AppThemes.scuro),
+                            value: AppThemes.chiaro,
+                            child: Text(AppThemes.toStr(AppThemes.chiaro),
                               style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
-                            value: AppThemes.vivace,
-                            child: Text(AppThemes.toStr(AppThemes.vivace),
+                            value: AppThemes.scuro,
+                            child: Text(AppThemes.toStr(AppThemes.scuro),
                               style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
