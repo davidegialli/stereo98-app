@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:audio_service/audio_service.dart';
-import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,15 +16,13 @@ import 'package:stereo98/utils/strings.dart';
 import 'package:stereo98/utils/themes.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:stereo98/services/notification_service.dart';
-   
-    
+
 // Notifier globale per il tema — accessibile da settings_screen
 final appThemeNotifier = ValueNotifier<int>(0);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Rotazione libera — tutte le orientazioni supportate
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -46,11 +43,9 @@ Future<void> main() async {
   await initialConfig();
   InternetCheckDependencyInjection.init();
 
-  // OneSignal
   OneSignal.initialize('3e87897b-47fb-4389-9efe-9b99ecc6949d');
   OneSignal.Notifications.requestPermission(true);
 
-  // Local notifications (palinsesto reminders)
   await NotificationService().init();
 
   try {
@@ -72,8 +67,7 @@ Future<void> main() async {
 
   runApp(const MyApp());
 }
- 
- 
+
 Future<void> initialConfig() async {
   await Get.putAsync(() => StorageService().init());
 }
@@ -88,72 +82,67 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
-  final dark = ThemeData.dark();
-  final themeMap = <int, ThemeData>{
-    AppThemes.vivace: ThemeData(
-      primaryColor: CustomColor.vivacePrimary,
-      scaffoldBackgroundColor: CustomColor.vivacePrimary,
-      cardColor: CustomColor.vivaceCard,
-      canvasColor: CustomColor.vivaceCanvas,
+
+  // Temi scuri disponibili
+  ThemeData get _scuroTheme => ThemeData(
+    primaryColor: CustomColor.darkPrimaryColor,
+    scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
+    cardColor: CustomColor.darkPrimaryColorOne,
+    canvasColor: CustomColor.darkPrimaryColorTwo,
+  );
+
+  ThemeData get _vivaceTheme => ThemeData(
+    primaryColor: CustomColor.vivacePrimary,
+    scaffoldBackgroundColor: CustomColor.vivacePrimary,
+    cardColor: CustomColor.vivaceCard,
+    canvasColor: CustomColor.vivaceCanvas,
+  );
+
+  ThemeData get _bluNotteTheme => ThemeData(
+    primaryColor: CustomColor.bluNottePrimary,
+    scaffoldBackgroundColor: CustomColor.bluNottePrimary,
+    cardColor: CustomColor.bluNotteCard,
+    canvasColor: CustomColor.bluNotteCanvas,
+  );
+
+  ThemeData get _amarantoTheme => ThemeData(
+    primaryColor: CustomColor.amarantoPrimary,
+    scaffoldBackgroundColor: CustomColor.amarantoPrimary,
+    cardColor: CustomColor.amarantoCard,
+    canvasColor: CustomColor.amarantoCanvas,
+  );
+
+  // Tema chiaro di sistema
+  ThemeData get _lightSystemTheme => ThemeData(
+    brightness: Brightness.light,
+    primaryColor: const Color(0xFF0D4A5E),
+    scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+    cardColor: const Color(0xFFFFFFFF),
+    canvasColor: const Color(0xFFEEEEEE),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF0D4A5E),
+      foregroundColor: Colors.white,
     ),
-    AppThemes.scuro: ThemeData(
-      primaryColor: CustomColor.darkPrimaryColor,
-      scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
-      cardColor: CustomColor.darkPrimaryColorOne,
-      canvasColor: CustomColor.darkPrimaryColorTwo,
-    ),
-    AppThemes.auto: ThemeData(
-      primaryColor: CustomColor.darkPrimaryColor,
-      scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
-      cardColor: CustomColor.darkPrimaryColorOne,
-      canvasColor: CustomColor.darkPrimaryColorTwo,
-    ),
-    AppThemes.bluNotte: ThemeData(
-      primaryColor: CustomColor.bluNottePrimary,
-      scaffoldBackgroundColor: CustomColor.bluNottePrimary,
-      cardColor: CustomColor.bluNotteCard,
-      canvasColor: CustomColor.bluNotteCanvas,
-    ),
-    AppThemes.amaranto: ThemeData(
-      primaryColor: CustomColor.amarantoPrimary,
-      scaffoldBackgroundColor: CustomColor.amarantoPrimary,
-      cardColor: CustomColor.amarantoCard,
-      canvasColor: CustomColor.amarantoCanvas,
-    ),
-    AppThemes.chiaro: ThemeData(
-      primaryColor: CustomColor.chiaroPrimary,
-      scaffoldBackgroundColor: CustomColor.chiaroPrimary,
-      cardColor: CustomColor.chiaroCard,
-      canvasColor: CustomColor.chiaroCanvas,
-      brightness: Brightness.light,
-      iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-      textTheme: const TextTheme(
-        bodyLarge:  TextStyle(color: Color(0xFF1A1A1A)),
-        bodyMedium: TextStyle(color: Color(0xFF1A1A1A)),
-        bodySmall:  TextStyle(color: Color(0xFF1A1A1A)),
-      ),
-    ),
-  };
+  );
 
   @override
   void initState() {
     super.initState();
-    appThemeNotifier.value = _getInitialTheme();
-    initialConfig();
+    appThemeNotifier.value = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  int _getInitialTheme() {
-    final savedMode = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
-    if (savedMode == AppThemes.auto) {
-      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      return brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
+  ThemeData _getTheme(int themeId) {
+    switch (themeId) {
+      case AppThemes.vivace:   return _vivaceTheme;
+      case AppThemes.bluNotte: return _bluNotteTheme;
+      case AppThemes.amaranto: return _amarantoTheme;
+      default:                 return _scuroTheme;
     }
-    return savedMode;
+  }
+
+  ThemeData _getDarkTheme() {
+    final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+    return _getTheme(savedDark);
   }
 
   @override
@@ -162,11 +151,10 @@ class _MyAppState extends State<MyApp> {
       designSize: const Size(414, 896),
       builder: (_, child) => _AutoThemeListener(
         box: _box,
-        themeNotifier: appThemeNotifier,
         child: ValueListenableBuilder<int>(
           valueListenable: appThemeNotifier,
           builder: (context, themeId, _) {
-            final theme = themeMap[themeId] ?? themeMap[AppThemes.scuro]!;
+            final isAuto = themeId == AppThemes.auto;
             return GetMaterialApp(
               builder: (context, widget) {
                 return MediaQuery(
@@ -181,7 +169,9 @@ class _MyAppState extends State<MyApp> {
               fallbackLocale: const Locale('it', 'IT'),
               title: Strings.oneRadio,
               debugShowCheckedModeBanner: false,
-              theme: theme,
+              theme: isAuto ? _lightSystemTheme : _getTheme(themeId),
+              darkTheme: isAuto ? _getDarkTheme() : null,
+              themeMode: isAuto ? ThemeMode.system : ThemeMode.light,
               navigatorKey: Get.key,
               initialRoute: Routes.splashScreen,
               getPages: Routes.list,
@@ -193,12 +183,10 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-
 class _AutoThemeListener extends StatefulWidget {
   final GetStorage box;
-  final ValueNotifier<int> themeNotifier;
   final Widget child;
-  const _AutoThemeListener({required this.box, required this.themeNotifier, required this.child});
+  const _AutoThemeListener({required this.box, required this.child});
 
   @override
   State<_AutoThemeListener> createState() => _AutoThemeListenerState();
@@ -219,10 +207,11 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
 
   @override
   void didChangePlatformBrightness() {
-    final savedMode = widget.box.read('stereo98_theme_mode') ?? 0;
+    // Con ThemeMode.system Flutter gestisce tutto automaticamente
+    // Forziamo solo un rebuild del ValueListenableBuilder
+    final savedMode = widget.box.read('stereo98_theme_mode') ?? AppThemes.scuro;
     if (savedMode == AppThemes.auto) {
-      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      widget.themeNotifier.value = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
+      appThemeNotifier.notifyListeners();
     }
   }
 

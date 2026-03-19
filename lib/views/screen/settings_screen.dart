@@ -30,16 +30,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    dropdownValue = _box.read('stereo98_theme_mode') ?? 0;
+    dropdownValue = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
   }
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
+    // Salva l'ultimo tema scuro scelto per l'automatico
+    if (themeId != AppThemes.auto) {
+      _box.write('stereo98_dark_theme', themeId);
+    }
     setState(() => dropdownValue = themeId);
-    if (themeId == AppThemes.auto) {
-      final brightness = MediaQuery.of(context).platformBrightness;
-      appThemeNotifier.value = brightness == Brightness.dark ? AppThemes.scuro : AppThemes.chiaro;
-    } else {
+    appThemeNotifier.value = themeId;
+  } else {
       appThemeNotifier.value = themeId;
     }
   }
@@ -100,13 +102,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: dropdownValue,
                         items: [
                           DropdownMenuItem(
-                            value: AppThemes.chiaro,
-                            child: Text(AppThemes.toStr(AppThemes.chiaro),
+                            value: AppThemes.scuro,
+                            child: Text(AppThemes.toStr(AppThemes.scuro),
                               style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
-                            value: AppThemes.scuro,
-                            child: Text(AppThemes.toStr(AppThemes.scuro),
+                            value: AppThemes.vivace,
+                            child: Text(AppThemes.toStr(AppThemes.vivace),
                               style: CustomStyler.settingsScreenDropDownTextStyle),
                           ),
                           DropdownMenuItem(
