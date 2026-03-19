@@ -1,4 +1,4 @@
-import 'package:stereo98/main.dart';
+import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -34,11 +34,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
-    if (themeId != AppThemes.auto) {
-      _box.write('stereo98_dark_theme', themeId);
-    }
     setState(() => dropdownValue = themeId);
-    appThemeNotifier.value = themeId;
+    if (themeId == AppThemes.auto) {
+      // Salva il tema scuro corrente come preferito per l'auto
+      final currentTheme = DynamicTheme.of(context)?.themeId ?? AppThemes.scuro;
+      if (currentTheme != AppThemes.auto && currentTheme != AppThemes.chiaro) {
+        _box.write('stereo98_dark_theme', currentTheme);
+      }
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.chiaro;
+      DynamicTheme.of(context)?.setTheme(effectiveTheme);
+    } else {
+      _box.write('stereo98_dark_theme', themeId);
+      DynamicTheme.of(context)?.setTheme(themeId);
+    }
   }
 
   @override
