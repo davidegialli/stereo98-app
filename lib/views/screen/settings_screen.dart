@@ -1,6 +1,5 @@
 import 'package:stereo98/main.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
