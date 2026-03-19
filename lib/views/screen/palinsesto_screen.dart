@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:stereo98/controller/home_controller.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 
 class PalinsestoScreen extends StatefulWidget {
   const PalinsestoScreen({super.key});
@@ -63,10 +64,10 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Palinsesto', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Palinsesto', style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Container(
@@ -83,7 +84,6 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         ),
         child: Column(
           children: [
-            // Giorni della settimana
             SizedBox(
               height: 52,
               child: ListView.builder(
@@ -108,14 +108,14 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                         border: Border.all(
                           color: isToday && !isSelected
                               ? const Color(0xFFD85D9D)
-                              : Colors.white.withOpacity(0.3),
+                              : context.s98Surface(0.3),
                           width: isToday && !isSelected ? 1.5 : 1,
                         ),
                       ),
                       child: Text(
                         _giorni[i].substring(0, 3),
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                          color: isSelected ? Colors.white : context.s98TextSecondary,
                           fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
                           fontSize: 13,
                         ),
@@ -125,7 +125,6 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                 },
               ),
             ),
-            // Lista show
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
@@ -139,14 +138,14 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
 
   Widget _buildShowList() {
     if (_palinsesto.isEmpty) {
-      return const Center(child: Text('Nessun palinsesto disponibile', style: TextStyle(color: Colors.white)));
+      return Center(child: Text('Nessun palinsesto disponibile', style: TextStyle(color: context.s98Text)));
     }
     List<dynamic> shows = [];
     if (_selectedDay < _palinsesto.length) {
       shows = _palinsesto[_selectedDay]['shows'] ?? [];
     }
     if (shows.isEmpty) {
-      return const Center(child: Text('Nessuno show programmato', style: TextStyle(color: Colors.white)));
+      return Center(child: Text('Nessuno show programmato', style: TextStyle(color: context.s98Text)));
     }
 
     final controller = Get.find<HomeController>();
@@ -162,7 +161,6 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
         final end = show['orario_fine'] ?? '';
         final isLive = _isLive(start, end) && DateTime.now().weekday - 1 == _selectedDay;
 
-        // weekday: _selectedDay è 0=Lunedì..6=Domenica → +1 per Dart weekday
         final weekday = _selectedDay + 1;
         final showKey = '$nome|$weekday|$start';
 
@@ -207,7 +205,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                   ],
                   Expanded(
                     child: Text(nome,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold, fontSize: 14),
                       overflow: TextOverflow.ellipsis),
                   ),
                 ],
@@ -233,7 +231,7 @@ class _PalinsestoScreenState extends State<PalinsestoScreen> {
                   child: Icon(
                     isFav ? Icons.favorite : Icons.favorite_border,
                     key: ValueKey(isFav),
-                    color: isFav ? const Color(0xFFD85D9D) : Colors.white.withOpacity(0.3),
+                    color: isFav ? const Color(0xFFD85D9D) : context.s98Surface(0.3),
                     size: 26,
                   ),
                 ),

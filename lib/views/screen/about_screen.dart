@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -38,12 +38,12 @@ class _AboutScreenState extends State<AboutScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.close(1),
         ),
         title: Text(
           Strings.aboutUs.tr,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -87,11 +87,11 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             addVerticalSpace(24),
-            const Center(
+            Center(
               child: Text(
                 'Stereo 98 DAB+',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.s98Text,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
@@ -106,7 +106,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 child: const Text(
                   'La tua radio preferita',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.white, // ShaderMask richiede bianco
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -130,14 +130,14 @@ class _AboutScreenState extends State<AboutScreen> {
                 color: const Color(0xFFD85D9D).withOpacity(0.07),
                 border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.2)),
               ),
-              child: const Text(
+              child: Text(
                 'Stereo 98 DAB+ è la radio che ti accompagna ogni giorno con la migliore musica, '
                 'informazione e intrattenimento. Presente sul digitale terrestre DAB+ e in streaming '
                 'su tutto il territorio nazionale.\n\n'
                 'Ascoltaci in diretta, segui i nostri programmi e resta sempre connesso con la nostra community.',
                 textAlign: TextAlign.justify,
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: context.s98TextSecondary,
                   fontSize: 14,
                   height: 1.7,
                 ),
@@ -161,7 +161,7 @@ class _AboutScreenState extends State<AboutScreen> {
               child: Text(
                 _version.isNotEmpty ? _version : 'Versione 1.1.0',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.3),
+                  color: context.s98TextFaint,
                   fontSize: 12,
                 ),
               ),
@@ -197,12 +197,12 @@ class _AboutScreenState extends State<AboutScreen> {
             Expanded(
               child: Text(
                 value,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.s98Text,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   decoration: TextDecoration.underline,
-                  decorationColor: Colors.white54,
+                  decorationColor: context.s98TextMuted,
                 ),
                 textAlign: TextAlign.right,
               ),
@@ -229,7 +229,7 @@ class _AboutScreenState extends State<AboutScreen> {
           const Spacer(),
           Expanded(
             child: Text(value,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(color: context.s98Text, fontSize: 13, fontWeight: FontWeight.w500),
               textAlign: TextAlign.right,
             ),
           ),

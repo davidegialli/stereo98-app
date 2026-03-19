@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:stereo98/routes/routes.dart';
-import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/dimsensions.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
 import 'package:stereo98/widget_helper/image_widget.dart';
 import 'package:stereo98/widget_helper/menu_item_widget.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 import 'package:rating_dialog/rating_dialog.dart';
 import 'package:store_redirect/store_redirect.dart';
 
@@ -49,7 +49,7 @@ class DrawerScreen extends StatelessWidget {
       child: ListView(
         children: [
           _headerDrawer(context),
-          Divider(height: 2, color: CustomColor.whiteColor.withOpacity(0.5)),
+          Divider(height: 2, color: context.s98Surface(0.5)),
           _listWidget(context),
         ],
       ),

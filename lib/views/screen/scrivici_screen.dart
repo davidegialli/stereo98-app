@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../controller/home_controller.dart';
-import '../../utils/custom_color.dart';
+import '../../utils/theme_helper.dart';
 
 class ScriviciScreen extends StatefulWidget {
   const ScriviciScreen({super.key});
@@ -116,7 +116,6 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
     final bgTop    = theme.primaryColor;
     final bgMid    = theme.cardColor;
     final bgBottom = theme.canvasColor;
-    final fieldFill = Colors.black.withOpacity(0.15);
 
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
@@ -124,11 +123,11 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
         backgroundColor: bgTop,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: CustomColor.whiteColor),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.close(1),
         ),
-        title: const Text('Contattaci',
-            style: TextStyle(color: CustomColor.whiteColor, fontWeight: FontWeight.bold)),
+        title: Text('Contattaci',
+            style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Container(
@@ -150,24 +149,24 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                   const SizedBox(height: 8),
                   _label('Nome *'),
                   const SizedBox(height: 6),
-                  _field(_nomeCtrl, 'Il tuo nome', fill: fieldFill,
+                  _field(_nomeCtrl, 'Il tuo nome',
                       validator: (v) => v!.trim().isEmpty ? 'Campo obbligatorio' : null),
                   const SizedBox(height: 16),
 
                   _label('Email (opzionale)'),
                   const SizedBox(height: 6),
-                  _field(_emailCtrl, 'La tua email', fill: fieldFill,
+                  _field(_emailCtrl, 'La tua email',
                       keyboardType: TextInputType.emailAddress),
                   const SizedBox(height: 16),
 
                   _label('Codice Fan (opzionale)'),
                   const SizedBox(height: 6),
-                  _field(_codiceFanCtrl, 'Il tuo codice fan', fill: fieldFill),
+                  _field(_codiceFanCtrl, 'Il tuo codice fan'),
                   const SizedBox(height: 16),
 
                   _label('Messaggio *'),
                   const SizedBox(height: 6),
-                  _field(_testoCtrl, 'Scrivi il tuo messaggio...', fill: fieldFill, maxLines: 5,
+                  _field(_testoCtrl, 'Scrivi il tuo messaggio...', maxLines: 5,
                       validator: (v) => v!.trim().isEmpty ? 'Campo obbligatorio' : null),
                   const SizedBox(height: 24),
 
@@ -180,9 +179,9 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                         onPressed: _pickPhoto,
                         icon: const Icon(Icons.photo_library, color: Color(0xFFD85D9D), size: 18),
                         label: Text(_foto == null ? 'Scegli foto' : 'Cambia foto',
-                            style: const TextStyle(color: Colors.white70)),
+                            style: TextStyle(color: context.s98TextSecondary)),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white24),
+                          side: BorderSide(color: context.s98Surface(0.24)),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
@@ -194,7 +193,7 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                           child: Image.file(_foto!, width: 50, height: 50, fit: BoxFit.cover),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white38, size: 18),
+                          icon: Icon(Icons.close, color: context.s98TextFaint, size: 18),
                           onPressed: () => setState(() => _foto = null),
                         ),
                       ],
@@ -215,10 +214,10 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                           decoration: BoxDecoration(
                             color: _isRecording
                                 ? Colors.red.withOpacity(0.20)
-                                : Colors.black.withOpacity(0.20),
+                                : context.s98Surface(0.10),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                                color: _isRecording ? Colors.red : Colors.white24),
+                                color: _isRecording ? Colors.red : context.s98Surface(0.24)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -231,7 +230,7 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                                 _isRecording
                                     ? 'Ferma registrazione'
                                     : (_audio != null ? 'Riregistra' : 'Registra audio'),
-                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                                style: TextStyle(color: context.s98TextSecondary, fontSize: 14),
                               ),
                             ],
                           ),
@@ -241,10 +240,10 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                         const SizedBox(width: 10),
                         const Icon(Icons.check_circle, color: Color(0xFFD85D9D), size: 20),
                         const SizedBox(width: 4),
-                        const Text('Registrato',
-                            style: TextStyle(color: Colors.white54, fontSize: 13)),
+                        Text('Registrato',
+                            style: TextStyle(color: context.s98TextMuted, fontSize: 13)),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white38, size: 18),
+                          icon: Icon(Icons.close, color: context.s98TextFaint, size: 18),
                           onPressed: () => setState(() => _audio = null),
                         ),
                       ],
@@ -263,7 +262,7 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        disabledBackgroundColor: Colors.white12,
+                        disabledBackgroundColor: context.s98Surface(0.12),
                       ),
                       child: _isSending
                           ? const SizedBox(height: 20, width: 20,
@@ -283,31 +282,30 @@ class _ScriviciScreenState extends State<ScriviciScreen> {
   }
 
   Widget _label(String text) => Text(text,
-      style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500));
+      style: TextStyle(color: context.s98TextSecondary, fontSize: 13, fontWeight: FontWeight.w500));
 
   Widget _field(TextEditingController ctrl, String hint, {
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-    required Color fill,
   }) {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: context.s98Text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white30),
+        hintStyle: TextStyle(color: context.s98TextFaint),
         filled: true,
-        fillColor: fill,
+        fillColor: context.s98FieldFill,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.white12)),
+            borderSide: BorderSide(color: context.s98Surface(0.12))),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.white12)),
+            borderSide: BorderSide(color: context.s98Surface(0.12))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFFD85D9D))),

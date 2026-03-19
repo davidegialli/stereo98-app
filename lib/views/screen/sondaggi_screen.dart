@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import '../../utils/custom_color.dart';
+import '../../utils/theme_helper.dart';
 
 class SondaggiScreen extends StatefulWidget {
   const SondaggiScreen({super.key});
@@ -30,24 +30,23 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          color: CustomColor.whiteColor,
+          color: context.s98Text,
           onPressed: () => Get.close(1),
         ),
-        title: const Text(
+        title: Text(
           'Sondaggi',
-          style: TextStyle(color: CustomColor.whiteColor),
+          style: TextStyle(color: context.s98Text),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white54),
+            icon: Icon(Icons.refresh, color: context.s98TextMuted),
             onPressed: _reload,
           ),
         ],
       ),
       body: Stack(
         children: [
-          // WebView (nascosta se errore)
           Visibility(
             visible: !hasError,
             maintainState: true,
@@ -78,7 +77,7 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
                   var style = document.createElement('style');
                   style.textContent = '* { max-width: 100vw !important; box-sizing: border-box !important; } html, body { overflow-x: hidden !important; width: 100% !important; }';
                   document.head.appendChild(style);
-                  
+
                   var meta = document.querySelector('meta[name="viewport"]');
                   if (meta) {
                     meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0';
@@ -92,7 +91,6 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
                 setState(() { isLoading = false; });
               },
               onReceivedError: (controller, request, error) {
-                // Solo errori sulla pagina principale, non su risorse secondarie
                 if (request.url.toString().contains('stereo98.com/sondaggi')) {
                   setState(() { isLoading = false; hasError = true; });
                 }
@@ -106,22 +104,21 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
             ),
           ),
 
-          // Pagina errore
           if (hasError)
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.wifi_off, color: Colors.white.withOpacity(0.3), size: 60),
+                  Icon(Icons.wifi_off, color: context.s98TextFaint, size: 60),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Connessione non disponibile',
-                    style: TextStyle(color: Colors.white54, fontSize: 16),
+                    style: TextStyle(color: context.s98TextMuted, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Controlla la tua connessione e riprova',
-                    style: TextStyle(color: Colors.white30, fontSize: 13),
+                    style: TextStyle(color: context.s98TextFaint, fontSize: 13),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -140,7 +137,6 @@ class _SondaggiScreenState extends State<SondaggiScreen> {
               ),
             ),
 
-          // Loading
           if (isLoading && !hasError)
             const Center(
               child: CircularProgressIndicator(color: Color(0xFFD85D9D)),

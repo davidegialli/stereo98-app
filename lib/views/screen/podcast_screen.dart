@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:stereo98/utils/theme_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PodcastScreen extends StatefulWidget {
@@ -54,10 +55,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Podcast', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Podcast', style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Container(
@@ -75,7 +76,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
             : _podcasts.isEmpty
-                ? const Center(child: Text('Nessun podcast disponibile', style: TextStyle(color: Colors.white)))
+                ? Center(child: Text('Nessun podcast disponibile', style: TextStyle(color: context.s98Text)))
                 : ListView.builder(
                     padding: const EdgeInsets.all(12),
                     itemCount: _podcasts.length,
@@ -109,7 +110,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 : _placeholder(),
                           ),
                           title: Text(title,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                            style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold, fontSize: 14),
                             maxLines: 2, overflow: TextOverflow.ellipsis),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +118,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                               if (dj.isNotEmpty)
                                 Text(dj, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 12)),
                               if (date.isNotEmpty)
-                                Text(date, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11)),
+                                Text(date, style: TextStyle(color: context.s98TextMuted, fontSize: 11)),
                             ],
                           ),
                           trailing: IconButton(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/dimsensions.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 
 class MenuItemWidget extends StatelessWidget {
   const MenuItemWidget({
@@ -18,7 +18,7 @@ class MenuItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      splashColor: CustomColor.whiteColor.withValues(alpha: 0.5),
+      splashColor: context.s98Surface(0.5),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: Dimensions.defaultPaddingSize * 0.5,
@@ -26,14 +26,14 @@ class MenuItemWidget extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Icon(icon, size: 30, color: CustomColor.whiteColor),
+              child: Icon(icon, size: 30, color: context.s98Icon),
             ),
             Expanded(
               flex: 3,
               child: Text(
                 screenName,
-                style: const TextStyle(
-                  color: CustomColor.whiteColor,
+                style: TextStyle(
+                  color: context.s98Text,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),

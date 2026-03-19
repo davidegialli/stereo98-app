@@ -81,57 +81,102 @@ class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
 
-  final themeCollection = ThemeCollection(themes: {
+  // ── AppBar theme condiviso per i temi chiari ────────────────────────────
+  static const _lightAppBarTheme = AppBarTheme(
+    backgroundColor: Color(0xFF0D4A5E),
+    foregroundColor: Colors.white,
+    iconTheme: IconThemeData(color: Colors.white),
+  );
+
+  // ── TextTheme scuro (per temi chiari) ───────────────────────────────────
+  static const _darkTextTheme = TextTheme(
+    bodyLarge:   TextStyle(color: Color(0xFF1A1A1A)),
+    bodyMedium:  TextStyle(color: Color(0xFF1A1A1A)),
+    bodySmall:   TextStyle(color: Color(0xFF1A1A1A)),
+    titleLarge:  TextStyle(color: Color(0xFF1A1A1A)),
+    titleMedium: TextStyle(color: Color(0xFF1A1A1A)),
+    titleSmall:  TextStyle(color: Color(0xFF1A1A1A)),
+  );
+
+  late final ThemeCollection themeCollection = ThemeCollection(themes: {
+    // ════════════════════════════════════════════════════════════════════════
+    //  TEMI SCURI
+    // ════════════════════════════════════════════════════════════════════════
     AppThemes.vivace: ThemeData(
+      brightness: Brightness.dark,
       primaryColor: CustomColor.vivacePrimary,
       scaffoldBackgroundColor: CustomColor.vivacePrimary,
       cardColor: CustomColor.vivaceCard,
       canvasColor: CustomColor.vivaceCanvas,
     ),
     AppThemes.scuro: ThemeData(
+      brightness: Brightness.dark,
       primaryColor: CustomColor.darkPrimaryColor,
       scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
       cardColor: CustomColor.darkPrimaryColorOne,
       canvasColor: CustomColor.darkPrimaryColorTwo,
     ),
     AppThemes.auto: ThemeData(
+      brightness: Brightness.dark,
       primaryColor: CustomColor.darkPrimaryColor,
       scaffoldBackgroundColor: CustomColor.darkPrimaryColor,
       cardColor: CustomColor.darkPrimaryColorOne,
       canvasColor: CustomColor.darkPrimaryColorTwo,
     ),
     AppThemes.bluNotte: ThemeData(
+      brightness: Brightness.dark,
       primaryColor: CustomColor.bluNottePrimary,
       scaffoldBackgroundColor: CustomColor.bluNottePrimary,
       cardColor: CustomColor.bluNotteCard,
       canvasColor: CustomColor.bluNotteCanvas,
     ),
     AppThemes.amaranto: ThemeData(
+      brightness: Brightness.dark,
       primaryColor: CustomColor.amarantoPrimary,
       scaffoldBackgroundColor: CustomColor.amarantoPrimary,
       cardColor: CustomColor.amarantoCard,
       canvasColor: CustomColor.amarantoCanvas,
     ),
+    AppThemes.grafite: ThemeData(
+      brightness: Brightness.dark,
+      primaryColor: CustomColor.grafitePrimary,
+      scaffoldBackgroundColor: CustomColor.grafitePrimary,
+      cardColor: CustomColor.grafiteCard,
+      canvasColor: CustomColor.grafiteCanvas,
+    ),
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TEMI CHIARI
+    // ════════════════════════════════════════════════════════════════════════
     AppThemes.chiaro: ThemeData(
       brightness: Brightness.light,
-      primaryColor: const Color(0xFFFFFFFF),
-      scaffoldBackgroundColor: const Color(0xFFFFFFFF),
-      cardColor: const Color(0xFFF5F5F5),
-      canvasColor: const Color(0xFFEEEEEE),
+      primaryColor: CustomColor.chiaroPrimary,
+      scaffoldBackgroundColor: CustomColor.chiaroPrimary,
+      cardColor: CustomColor.chiaroCard,
+      canvasColor: CustomColor.chiaroCanvas,
       iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF0D4A5E),
-        foregroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: Color(0xFF1A1A1A)),
-        bodyMedium: TextStyle(color: Color(0xFF1A1A1A)),
-        bodySmall: TextStyle(color: Color(0xFF1A1A1A)),
-        titleLarge: TextStyle(color: Color(0xFF1A1A1A)),
-        titleMedium: TextStyle(color: Color(0xFF1A1A1A)),
-        titleSmall: TextStyle(color: Color(0xFF1A1A1A)),
-      ),
+      appBarTheme: _lightAppBarTheme,
+      textTheme: _darkTextTheme,
+    ),
+    AppThemes.rosaCipria: ThemeData(
+      brightness: Brightness.light,
+      primaryColor: CustomColor.rosaCipriaPrimary,
+      scaffoldBackgroundColor: CustomColor.rosaCipriaPrimary,
+      cardColor: CustomColor.rosaCipriaCard,
+      canvasColor: CustomColor.rosaCipriaCanvas,
+      iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
+      appBarTheme: _lightAppBarTheme,
+      textTheme: _darkTextTheme,
+    ),
+    AppThemes.azzurroCielo: ThemeData(
+      brightness: Brightness.light,
+      primaryColor: CustomColor.azzurroCieloPrimary,
+      scaffoldBackgroundColor: CustomColor.azzurroCieloPrimary,
+      cardColor: CustomColor.azzurroCieloCard,
+      canvasColor: CustomColor.azzurroCieloCanvas,
+      iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
+      appBarTheme: _lightAppBarTheme,
+      textTheme: _darkTextTheme,
     ),
   });
 
@@ -139,8 +184,9 @@ class _MyAppState extends State<MyApp> {
     final savedMode = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      return brightness == Brightness.dark ? savedDark : AppThemes.chiaro;
+      final savedDark  = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final savedLight = _box.read('stereo98_light_theme') ?? AppThemes.chiaro;
+      return brightness == Brightness.dark ? savedDark : savedLight;
     }
     return savedMode;
   }
@@ -153,11 +199,25 @@ class _MyAppState extends State<MyApp> {
         themeCollection: themeCollection,
         defaultThemeId: _getInitialTheme(),
         builder: (context, theme) {
-          // _AutoThemeListener è DENTRO DynamicTheme — può chiamare DynamicTheme.of(context)
           return _AutoThemeListener(
             box: _box,
             child: GetMaterialApp(
               builder: (context, widget) {
+                // Aggiorna system UI in base al tema
+                final isLight = Theme.of(context).brightness == Brightness.light;
+                SystemChrome.setSystemUIOverlayStyle(isLight
+                    ? const SystemUiOverlayStyle(
+                        statusBarColor: Colors.transparent,
+                        statusBarIconBrightness: Brightness.dark,
+                        systemNavigationBarColor: Colors.transparent,
+                        systemNavigationBarIconBrightness: Brightness.dark,
+                      )
+                    : const SystemUiOverlayStyle(
+                        statusBarColor: Colors.transparent,
+                        statusBarIconBrightness: Brightness.light,
+                        systemNavigationBarColor: Colors.transparent,
+                        systemNavigationBarIconBrightness: Brightness.light,
+                      ));
                 return MediaQuery(
                   data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
                   child: widget!,
@@ -210,8 +270,9 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
     final savedMode = widget.box.read('stereo98_theme_mode') ?? AppThemes.scuro;
     if (savedMode == AppThemes.auto) {
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      final savedDark = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.chiaro;
+      final savedDark  = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final savedLight = widget.box.read('stereo98_light_theme') ?? AppThemes.chiaro;
+      final effectiveTheme = brightness == Brightness.dark ? savedDark : savedLight;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         DynamicTheme.of(context)?.setTheme(effectiveTheme);
       });

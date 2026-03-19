@@ -10,6 +10,7 @@ import 'package:stereo98/controller/home_controller.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/dimsensions.dart';
 import 'package:stereo98/utils/size.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 import 'package:stereo98/views/screen/drawer_screen.dart';
 import 'package:stereo98/widget_helper/network_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -50,12 +51,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+            colors: context.s98ModalGradient,
           ),
         ),
         child: Column(
@@ -63,17 +64,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             Container(
               width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: context.s98Surface(0.24), borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Sleep Timer',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(color: context.s98Text, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'La radio si spegne automaticamente',
-              style: TextStyle(color: Colors.white54, fontSize: 13),
+              style: TextStyle(color: context.s98TextMuted, fontSize: 13),
             ),
             const SizedBox(height: 24),
             Obx(() {
@@ -94,14 +95,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient: isActive ? const LinearGradient(colors: [Color(0xFFD85D9D), Color(0xFF4EC8E8)]) : null,
-                        color: isActive ? null : Colors.white.withOpacity(0.08),
-                        border: Border.all(color: isActive ? Colors.transparent : Colors.white24),
+                        color: isActive ? null : context.s98Surface(0.08),
+                        border: Border.all(color: isActive ? Colors.transparent : context.s98Surface(0.24)),
                       ),
                       child: Center(
                         child: Text(
                           '$min min',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isActive ? Colors.white : context.s98Text,
                             fontSize: 14,
                             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                           ),
@@ -157,12 +158,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+              colors: context.s98ModalGradient,
             ),
           ),
           child: Column(
@@ -170,10 +171,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             children: [
               Container(
                 width: 40, height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: context.s98Surface(0.24), borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 20),
-              const Text('Il tuo profilo fan', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('Il tuo profilo fan', style: TextStyle(color: context.s98Text, fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Obx(() => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -192,26 +193,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 final votes = _controller.fanTotalVotes.value;
                 return Text(
                   '⭐ $votes voti${pos != null ? ' • 🏆 Posizione #$pos' : ''}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  style: TextStyle(color: context.s98TextMuted, fontSize: 13),
                 );
               }),
               const SizedBox(height: 20),
               TextField(
                 controller: nomeController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.s98Text),
                 decoration: InputDecoration(
                   labelText: 'Il tuo nome (facoltativo)',
-                  labelStyle: const TextStyle(color: Colors.white38),
+                  labelStyle: TextStyle(color: context.s98TextFaint),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(color: context.s98Surface(0.2)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFFD85D9D)),
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: context.s98Surface(0.05),
                 ),
               ),
               const SizedBox(height: 16),
@@ -235,9 +236,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Il codice fan ti serve per ritirare i premi!',
-                style: TextStyle(color: Colors.white38, fontSize: 11),
+                style: TextStyle(color: context.s98TextFaint, fontSize: 11),
               ),
               const SizedBox(height: 8),
             ],
@@ -280,8 +281,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               Expanded(
                 child: _MarqueeText(
                   text: testo,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.s98Text,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.3,
@@ -324,8 +325,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 onTap: () => _openLink(url),
                 child: Text(
                   testo,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.s98Text,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -341,9 +342,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: context.s98Surface(0.1),
                 ),
-                child: const Icon(Icons.close, color: Colors.white54, size: 16),
+                child: Icon(Icons.close, color: context.s98TextMuted, size: 16),
               ),
             ),
           ],
@@ -500,18 +501,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               shape: BoxShape.circle,
               color: _controller.sleepTimerMinutes.value > 0
                 ? const Color(0xFF4EC8E8).withOpacity(0.2)
-                : Colors.white.withOpacity(0.08),
+                : context.s98Surface(0.08),
               border: Border.all(
                 color: _controller.sleepTimerMinutes.value > 0
                   ? const Color(0xFF4EC8E8).withOpacity(0.6)
-                  : Colors.white.withOpacity(0.2),
+                  : context.s98Surface(0.2),
               ),
             ),
             child: Icon(
               Icons.bedtime,
               color: _controller.sleepTimerMinutes.value > 0
                 ? const Color(0xFF4EC8E8)
-                : Colors.white54,
+                : context.s98TextMuted,
               size: 22,
             ),
           )),
@@ -528,12 +529,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               width: 44, height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(playing ? 0.08 : 0.03),
-                border: Border.all(color: Colors.white.withOpacity(playing ? 0.2 : 0.08)),
+                color: context.s98Surface(playing ? 0.08 : 0.03),
+                border: Border.all(color: context.s98Surface(playing ? 0.2 : 0.08)),
               ),
               child: Icon(
                 Icons.share,
-                color: playing ? Colors.white54 : Colors.white24,
+                color: playing ? context.s98TextMuted : context.s98TextDisabled,
                 size: 20,
               ),
             ),
@@ -569,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
         const SizedBox(width: 14),
 
-        // ⭐ STELLA — voto chart, solo su canzoni (non dirette/programmi)
+        // ⭐ STELLA
         Obx(() {
           final playActive = _controller.isPressed.value;
           final voted = _controller.currentSongVoted.value;
@@ -583,18 +584,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 shape: BoxShape.circle,
                 color: voted && isSong
                   ? const Color(0xFFFFD700).withOpacity(0.2)
-                  : Colors.white.withOpacity(isSong ? 0.08 : 0.03),
+                  : context.s98Surface(isSong ? 0.08 : 0.03),
                 border: Border.all(
                   color: voted && isSong
                     ? const Color(0xFFFFD700).withOpacity(0.6)
-                    : Colors.white.withOpacity(isSong ? 0.2 : 0.08),
+                    : context.s98Surface(isSong ? 0.2 : 0.08),
                 ),
               ),
               child: Icon(
                 voted && isSong ? Icons.star : Icons.star_border,
                 color: voted && isSong
                   ? const Color(0xFFFFD700)
-                  : (isSong ? Colors.white54 : Colors.white24),
+                  : (isSong ? context.s98TextMuted : context.s98TextDisabled),
                 size: 22,
               ),
             ),
@@ -603,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
         const SizedBox(width: 14),
 
-        // 🎧 BITRATE — si illumina quando in play
+        // 🎧 BITRATE
         Obx(() {
           final playing = _controller.isPressed.value;
           final quality = _controller.streamQuality.value;
@@ -614,18 +615,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               shape: BoxShape.circle,
               color: playing
                 ? const Color(0xFF4EC8E8).withOpacity(0.2)
-                : Colors.white.withOpacity(0.03),
+                : context.s98Surface(0.03),
               border: Border.all(
                 color: playing
                   ? const Color(0xFF4EC8E8).withOpacity(0.6)
-                  : Colors.white.withOpacity(0.08),
+                  : context.s98Surface(0.08),
               ),
             ),
             child: Center(
               child: Text(
                 quality,
                 style: TextStyle(
-                  color: playing ? const Color(0xFF4EC8E8) : Colors.white24,
+                  color: playing ? const Color(0xFF4EC8E8) : context.s98TextDisabled,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -657,13 +658,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.volume_mute, color: Colors.white),
+        Icon(Icons.volume_mute, color: context.s98Icon),
         Obx(() => SizedBox(
           width: sliderWidth,
           child: Slider(
             min: 0.0, max: 1.0,
             activeColor: CustomColor.primaryColorOne,
-            inactiveColor: Colors.white.withOpacity(0.3),
+            inactiveColor: context.s98Surface(0.3),
             thumbColor: CustomColor.primaryColor,
             value: sliderValue.value,
             onChanged: (value) async {
@@ -672,7 +673,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             },
           ),
         )),
-        const Icon(Icons.volume_up, color: Colors.white),
+        Icon(Icons.volume_up, color: context.s98Icon),
       ],
     );
   }
@@ -686,7 +687,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _controller.titleValue.value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(color: context.s98Text, fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         )),
@@ -766,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(height: 6),
                           Text(show,
-                            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: context.s98Text, fontSize: 15, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (numero.isNotEmpty) ...[
@@ -790,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     const Icon(Icons.chat, color: Color(0xFF25D366), size: 16),
                                     const SizedBox(width: 6),
                                     Text('WhatsApp - $studio',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                                      style: TextStyle(color: context.s98Text, fontSize: 12, fontWeight: FontWeight.w500)),
                                   ],
                                 ),
                               ),
@@ -821,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Expanded(
                       child: Text(
                         nextTime.isNotEmpty ? '$nextShow alle $nextTime' : nextShow,
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: context.s98Text, fontSize: 12, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -842,9 +843,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         title: Row(
           children: [
@@ -879,12 +880,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             Image.asset('assets/images/logo_header.png', height: 40, fit: BoxFit.contain),
           ],
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: context.s98Icon),
       ),
       drawer: DrawerScreen(),
       body: Stack(
         children: [
-          // ✅ Layout responsivo: portrait vs landscape
           OrientationBuilder(
             builder: (context, orientation) {
               if (orientation == Orientation.landscape) {
@@ -893,7 +893,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               return _bodyPortrait(context);
             },
           ),
-          // PREMIO OVERLAY — funziona in entrambe le orientazioni
           _buildPremioOverlay(),
         ],
       ),
@@ -916,10 +915,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             constraints: const BoxConstraints(maxWidth: 400),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF2A1A2E), Color(0xFF1A0A1E)],
+                colors: context.s98ModalGradient,
               ),
               border: Border.all(color: const Color(0xFFD85D9D), width: 2),
               boxShadow: [
@@ -931,14 +930,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               children: [
                 const Text('🎉', style: TextStyle(fontSize: 50)),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'HAI VINTO!',
-                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: context.s98Text, fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   _controller.premioMessaggio.value,
-                  style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+                  style: TextStyle(color: context.s98TextSecondary, fontSize: 15, height: 1.4),
                   textAlign: TextAlign.center,
                 ),
                 if (_controller.fanCode.value.isNotEmpty) ...[
@@ -983,16 +982,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   // ============================================================================
-  // BODY PORTRAIT — layout originale
+  // BODY PORTRAIT
   // ============================================================================
 
   Widget _bodyPortrait(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1A0A10), Color(0xFF000000), Color(0xFF0A0A1A)],
+          colors: context.s98BodyGradient,
         ),
       ),
       child: SingleChildScrollView(
@@ -1067,28 +1066,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   // ============================================================================
-  // BODY LANDSCAPE — layout a due colonne
+  // BODY LANDSCAPE
   // ============================================================================
 
   Widget _bodyLandscape(BuildContext context) {
     final screenH = MediaQuery.of(context).size.height;
     final screenW = MediaQuery.of(context).size.width;
-    // Artwork size: 60% dell'altezza disponibile (meno appbar ~56px)
     final artSize = ((screenH - 56) * 0.55).clamp(120.0, 300.0);
-    // Volume slider: proporzionale alla colonna
     final sliderW = (screenW * 0.2).clamp(120.0, 250.0);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1A0A10), Color(0xFF000000), Color(0xFF0A0A1A)],
+          colors: context.s98BodyGradient,
         ),
       ),
       child: Row(
         children: [
-          // ===== COLONNA SINISTRA: Artwork + Titolo + Volume =====
           Expanded(
             flex: 5,
             child: Center(
@@ -1097,7 +1093,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Artwork con glassmorphic border
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -1144,7 +1139,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // ===== COLONNA DESTRA: Controlli + Info (scrollabile) =====
           Expanded(
             flex: 5,
             child: SingleChildScrollView(
@@ -1244,7 +1238,6 @@ class _MarqueeTextState extends State<_MarqueeText> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
-    // ✅ ClipRect evita overflow visivo del testo in landscape
     return ClipRect(
       child: SizedBox(
         height: 20,

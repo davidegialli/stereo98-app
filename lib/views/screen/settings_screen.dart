@@ -6,11 +6,11 @@ import 'package:get_storage/get_storage.dart';
 import 'package:stereo98/controller/home_controller.dart';
 import 'package:stereo98/services/notification_service.dart';
 import 'package:stereo98/controller/language_controller.dart';
-import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/custom_style.dart';
 import 'package:stereo98/utils/size.dart';
 import 'package:stereo98/utils/strings.dart';
 import 'package:stereo98/utils/themes.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,30 +23,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final languageController = Get.put(LanguageController());
   final _box = GetStorage();
 
-  // 0=light, 1=dark, 2=auto
   int dropdownValue = AppThemes.scuro;
+
+  // Per Automatico: tema scuro e chiaro preferiti
+  int _autoDarkTheme  = AppThemes.scuro;
+  int _autoLightTheme = AppThemes.chiaro;
 
   @override
   void initState() {
     super.initState();
-    dropdownValue = _box.read('stereo98_theme_mode') ?? AppThemes.scuro;
+    dropdownValue   = _box.read('stereo98_theme_mode')  ?? AppThemes.scuro;
+    _autoDarkTheme  = _box.read('stereo98_dark_theme')   ?? AppThemes.scuro;
+    _autoLightTheme = _box.read('stereo98_light_theme')  ?? AppThemes.chiaro;
   }
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
     setState(() => dropdownValue = themeId);
     if (themeId == AppThemes.auto) {
-      // Salva il tema scuro corrente come preferito per l'auto
-      final currentTheme = DynamicTheme.of(context)?.themeId ?? AppThemes.scuro;
-      if (currentTheme != AppThemes.auto && currentTheme != AppThemes.chiaro) {
-        _box.write('stereo98_dark_theme', currentTheme);
-      }
       final brightness = MediaQuery.of(context).platformBrightness;
-      final savedDark = _box.read('stereo98_dark_theme') ?? AppThemes.scuro;
-      final effectiveTheme = brightness == Brightness.dark ? savedDark : AppThemes.chiaro;
+      final effectiveTheme = brightness == Brightness.dark ? _autoDarkTheme : _autoLightTheme;
       DynamicTheme.of(context)?.setTheme(effectiveTheme);
     } else {
-      _box.write('stereo98_dark_theme', themeId);
+      // Salva come preferito scuro o chiaro per l'auto
+      if (AppThemes.isLight(themeId)) {
+        _box.write('stereo98_light_theme', themeId);
+        _autoLightTheme = themeId;
+      } else {
+        _box.write('stereo98_dark_theme', themeId);
+        _autoDarkTheme = themeId;
+      }
       DynamicTheme.of(context)?.setTheme(themeId);
     }
   }
@@ -56,8 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: CustomColor.whiteColor,
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: (() {
             Get.close(1);
           }),
@@ -65,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         title: Text(
           Strings.settings.tr,
-          style: const TextStyle(color: CustomColor.whiteColor),
+          style: TextStyle(color: context.s98Text),
         ),
         elevation: 0,
         centerTitle: true,
@@ -93,44 +98,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     Strings.darkModeSelect.tr,
-                    style: CustomStyler.settingsScreenTextStyle,
+                    style: CustomStyler.settingsScreenTextStyle(context),
                   ),
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_drop_down,
-                          color: Colors.white,
+                          color: context.s98Icon,
                           size: 35,
                         ),
                         value: dropdownValue,
                         items: [
-                          DropdownMenuItem(
-                            value: AppThemes.scuro,
-                            child: Text(AppThemes.toStr(AppThemes.scuro),
-                              style: CustomStyler.settingsScreenDropDownTextStyle),
-                          ),
-                          DropdownMenuItem(
-                            value: AppThemes.vivace,
-                            child: Text(AppThemes.toStr(AppThemes.vivace),
-                              style: CustomStyler.settingsScreenDropDownTextStyle),
-                          ),
-                          DropdownMenuItem(
-                            value: AppThemes.bluNotte,
-                            child: Text(AppThemes.toStr(AppThemes.bluNotte),
-                              style: CustomStyler.settingsScreenDropDownTextStyle),
-                          ),
-                          DropdownMenuItem(
-                            value: AppThemes.amaranto,
-                            child: Text(AppThemes.toStr(AppThemes.amaranto),
-                              style: CustomStyler.settingsScreenDropDownTextStyle),
-                          ),
+                          // ── Automatico ──
                           DropdownMenuItem(
                             value: AppThemes.auto,
-                            child: Text(AppThemes.toStr(AppThemes.auto),
-                              style: CustomStyler.settingsScreenDropDownTextStyle),
+                            child: Text('${AppThemes.icon(AppThemes.auto)} ${AppThemes.toStr(AppThemes.auto)}',
+                              style: CustomStyler.settingsScreenDropDownTextStyle(context)),
                           ),
+                          // ── Temi scuri ──
+                          ...AppThemes.darkThemes.map((id) => DropdownMenuItem(
+                            value: id,
+                            child: Text('${AppThemes.icon(id)} ${AppThemes.toStr(id)}',
+                              style: CustomStyler.settingsScreenDropDownTextStyle(context)),
+                          )),
+                          // ── Temi chiari ──
+                          ...AppThemes.lightThemes.map((id) => DropdownMenuItem(
+                            value: id,
+                            child: Text('${AppThemes.icon(id)} ${AppThemes.toStr(id)}',
+                              style: CustomStyler.settingsScreenDropDownTextStyle(context)),
+                          )),
                         ],
                         onChanged: (dynamic themeId) {
                           _applyTheme(themeId);
@@ -141,6 +139,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+
+            // ── Sub-dropdown per Automatico: scuro + chiaro preferiti ──
+            if (dropdownValue == AppThemes.auto) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 40, right: 24, top: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Tema scuro', style: TextStyle(color: context.s98TextMuted, fontSize: 13)),
+                    DropdownButton<int>(
+                      icon: Icon(Icons.arrow_drop_down, color: context.s98IconMuted, size: 28),
+                      value: _autoDarkTheme,
+                      items: AppThemes.darkThemes.map((id) => DropdownMenuItem(
+                        value: id,
+                        child: Text('${AppThemes.icon(id)} ${AppThemes.toStr(id)}',
+                          style: TextStyle(color: context.s98Text, fontSize: 13)),
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _autoDarkTheme = value);
+                          _box.write('stereo98_dark_theme', value);
+                          // Se attualmente è scuro, applica subito
+                          final brightness = MediaQuery.of(context).platformBrightness;
+                          if (brightness == Brightness.dark) {
+                            DynamicTheme.of(context)?.setTheme(value);
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 40, right: 24, top: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Tema chiaro', style: TextStyle(color: context.s98TextMuted, fontSize: 13)),
+                    DropdownButton<int>(
+                      icon: Icon(Icons.arrow_drop_down, color: context.s98IconMuted, size: 28),
+                      value: _autoLightTheme,
+                      items: AppThemes.lightThemes.map((id) => DropdownMenuItem(
+                        value: id,
+                        child: Text('${AppThemes.icon(id)} ${AppThemes.toStr(id)}',
+                          style: TextStyle(color: context.s98Text, fontSize: 13)),
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _autoLightTheme = value);
+                          _box.write('stereo98_light_theme', value);
+                          final brightness = MediaQuery.of(context).platformBrightness;
+                          if (brightness == Brightness.light) {
+                            DynamicTheme.of(context)?.setTheme(value);
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             addVerticalSpace(12),
             // === QUALITÀ STREAMING ===
             Padding(
@@ -150,34 +210,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'Qualità streaming',
-                    style: CustomStyler.settingsScreenTextStyle,
+                    style: CustomStyler.settingsScreenTextStyle(context),
                   ),
                   Obx(() {
                     final controller = Get.find<HomeController>();
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownButton<String>(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_drop_down,
-                          color: Colors.white,
+                          color: context.s98Icon,
                           size: 35,
                         ),
                         value: controller.streamQuality.value,
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: '320',
                             child: Text('Alta (320 kbps)',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                           DropdownMenuItem(
                             value: '256',
                             child: Text('Media (256 kbps)',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                           DropdownMenuItem(
                             value: '128',
                             child: Text('Bassa (128 kbps)',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                         ],
                         onChanged: (value) {
@@ -200,39 +260,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'Notifica programmi',
-                    style: CustomStyler.settingsScreenTextStyle,
+                    style: CustomStyler.settingsScreenTextStyle(context),
                   ),
                   Obx(() {
                     final controller = Get.find<HomeController>();
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: DropdownButton<int>(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_drop_down,
-                          color: Colors.white,
+                          color: context.s98Icon,
                           size: 35,
                         ),
                         value: controller.notifyMinutesBefore.value,
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: 5,
                             child: Text('5 min prima',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                           DropdownMenuItem(
                             value: 10,
                             child: Text('10 min prima',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                           DropdownMenuItem(
                             value: 15,
                             child: Text('15 min prima',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                           DropdownMenuItem(
                             value: 30,
                             child: Text('30 min prima',
-                              style: TextStyle(color: Colors.white, fontSize: 14)),
+                              style: TextStyle(color: context.s98Text, fontSize: 14)),
                           ),
                         ],
                         onChanged: (value) {
@@ -259,7 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.only(left: 20),
                       child: Text(
                         Strings.changeLanguage.tr,
-                        style: CustomStyler.settingsScreenDropDownTextStyle,
+                        style: CustomStyler.settingsScreenDropDownTextStyle(context),
                       ),
                     ),
                     Padding(
@@ -277,7 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Text(
                                 item.value['description'],
                                 style: CustomStyler
-                                    .settingsScreenDropDownTextStyle,
+                                    .settingsScreenDropDownTextStyle(context),
                               ),
                             );
                           }).toList(),

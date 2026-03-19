@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:stereo98/utils/theme_helper.dart';
 
 class ShowsScreen extends StatefulWidget {
   const ShowsScreen({super.key});
@@ -45,10 +46,10 @@ class _ShowsScreenState extends State<ShowsScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Shows', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Shows', style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Container(
@@ -66,10 +67,9 @@ class _ShowsScreenState extends State<ShowsScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
             : _shows.isEmpty
-                ? const Center(child: Text('Nessuno show disponibile', style: TextStyle(color: Colors.white)))
+                ? Center(child: Text('Nessuno show disponibile', style: TextStyle(color: context.s98Text)))
                 : OrientationBuilder(
                     builder: (context, orientation) {
-                      // ✅ Più colonne in landscape per sfruttare lo spazio
                       final crossAxisCount = orientation == Orientation.landscape ? 4 : 2;
                       return GridView.builder(
                         padding: const EdgeInsets.all(12),
@@ -107,7 +107,6 @@ class _ShowsScreenState extends State<ShowsScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Immagine show
                                   Expanded(
                                     child: ClipRRect(
                                       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
@@ -121,7 +120,6 @@ class _ShowsScreenState extends State<ShowsScreen> {
                                           : _placeholder(),
                                     ),
                                   ),
-                                  // Info show
                                   Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Column(
@@ -129,8 +127,8 @@ class _ShowsScreenState extends State<ShowsScreen> {
                                       children: [
                                         Text(
                                           nome,
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: context.s98Text,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 13,
                                           ),
@@ -155,7 +153,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
                                               Expanded(
                                                 child: Text(
                                                   palinsesto,
-                                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
+                                                  style: TextStyle(color: context.s98TextMuted, fontSize: 10),
                                                   maxLines: 1,
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -191,92 +189,93 @@ class _ShowsScreenState extends State<ShowsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => Container(
-        // ✅ In landscape: quasi full screen per avere abbastanza spazio
-        height: isLandscape
-            ? MediaQuery.of(context).size.height * 0.85
-            : MediaQuery.of(context).size.height * 0.7,
-        constraints: const BoxConstraints(maxWidth: 600),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A0A10), Color(0xFF0A0A1A)],
-          ),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          border: Border(
-            top: BorderSide(color: Color(0xFFD85D9D), width: 2),
-          ),
-        ),
-        child: Column(
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
+      builder: (_) {
+        final ctx = context;
+        return Container(
+          height: isLandscape
+              ? MediaQuery.of(context).size.height * 0.85
+              : MediaQuery.of(context).size.height * 0.7,
+          constraints: const BoxConstraints(maxWidth: 600),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: ctx.s98ModalGradient,
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (image.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(image,
-                          height: isLandscape ? 140 : 180,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const SizedBox.shrink()),
-                      ),
-                    const SizedBox(height: 16),
-                    Text(nome, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                    if (conduttore.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.mic, color: Color(0xFF4EC8E8), size: 16),
-                          const SizedBox(width: 6),
-                          Text(conduttore, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 16)),
-                        ],
-                      ),
-                    ],
-                    if (palinsesto.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD85D9D).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.schedule, color: Color(0xFFD85D9D), size: 14),
-                            const SizedBox(width: 6),
-                            Text(palinsesto, style: const TextStyle(color: Colors.white, fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (descrizione.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Text(descrizione, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, height: 1.5), textAlign: TextAlign.center),
-                    ],
-                  ],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            border: const Border(
+              top: BorderSide(color: Color(0xFFD85D9D), width: 2),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ctx.s98Surface(0.3),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (image.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(image,
+                            height: isLandscape ? 140 : 180,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                        ),
+                      const SizedBox(height: 16),
+                      Text(nome, style: TextStyle(color: ctx.s98Text, fontSize: 22, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                      if (conduttore.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.mic, color: Color(0xFF4EC8E8), size: 16),
+                            const SizedBox(width: 6),
+                            Text(conduttore, style: const TextStyle(color: Color(0xFF4EC8E8), fontSize: 16)),
+                          ],
+                        ),
+                      ],
+                      if (palinsesto.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD85D9D).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFD85D9D).withOpacity(0.5)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.schedule, color: Color(0xFFD85D9D), size: 14),
+                              const SizedBox(width: 6),
+                              Text(palinsesto, style: TextStyle(color: ctx.s98Text, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (descrizione.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(descrizione, style: TextStyle(color: ctx.s98TextSecondary, fontSize: 14, height: 1.5), textAlign: TextAlign.center),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -287,7 +286,6 @@ class _ShowsScreenState extends State<ShowsScreen> {
     );
   }
 
-  // 🔥 Fix encoding HTML entities
   String _fixText(String text) {
     return text
       .replaceAll('&#8217;', "'")
@@ -304,7 +302,6 @@ class _ShowsScreenState extends State<ShowsScreen> {
       .replaceAll('&gt;', '>')
       .replaceAll('&hellip;', '…')
       .replaceAll('[&hellip;]', '…')
-      .replaceAll('[…]', '…')
-      .replaceAll(RegExp(r'<[^>]*>'), ''); // rimuove tag HTML
+      .replaceAll(RegExp(r'<[^>]*>'), '');
   }
 }

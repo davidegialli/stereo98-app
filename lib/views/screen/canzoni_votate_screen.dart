@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:stereo98/controller/home_controller.dart';
+import 'package:stereo98/utils/theme_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CanzoniVotateScreen extends StatefulWidget {
@@ -47,7 +48,6 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
   }
 
   void _openAppleMusic(String artista, String titolo) async {
-    // Cerca tramite iTunes API per ottenere il link diretto
     try {
       final query = Uri.encodeComponent('$artista $titolo');
       final apiUrl = Uri.parse('https://itunes.apple.com/search?term=$query&media=music&limit=1&country=it');
@@ -69,7 +69,6 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
       }
     } catch (_) {}
 
-    // Fallback: ricerca Google
     final fallback = Uri.parse('https://www.google.com/search?q=${Uri.encodeComponent('$artista $titolo apple music')}');
     if (await canLaunchUrl(fallback)) {
       await launchUrl(fallback, mode: LaunchMode.externalApplication);
@@ -84,12 +83,12 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.s98Text),
           onPressed: () => Get.close(1),
         ),
-        title: const Text(
+        title: Text(
           'Le Mie Canzoni',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -108,21 +107,21 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFD85D9D)))
             : _canzoni.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.star_border, color: Colors.white24, size: 60),
-                        SizedBox(height: 16),
-                        Text('Nessuna canzone votata', style: TextStyle(color: Colors.white54, fontSize: 16)),
-                        SizedBox(height: 8),
-                        Text('Vota le canzoni con ⭐ durante l\'ascolto', style: TextStyle(color: Colors.white30, fontSize: 13)),
+                        Icon(Icons.star_border, color: context.s98TextDisabled, size: 60),
+                        const SizedBox(height: 16),
+                        Text('Nessuna canzone votata', style: TextStyle(color: context.s98TextMuted, fontSize: 16)),
+                        const SizedBox(height: 8),
+                        Text('Vota le canzoni con ⭐ durante l\'ascolto', style: TextStyle(color: context.s98TextFaint, fontSize: 13)),
                       ],
                     ),
                   )
                 : RefreshIndicator(
                     color: const Color(0xFFD85D9D),
-                    backgroundColor: const Color(0xFF1A0A1E),
+                    backgroundColor: context.s98RefreshBg,
                     onRefresh: _fetchVotate,
                     child: ListView.builder(
                       padding: const EdgeInsets.all(12),
@@ -138,9 +137,9 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             gradient: LinearGradient(
-                              colors: [Colors.white.withOpacity(0.06), Colors.white.withOpacity(0.02)],
+                              colors: [context.s98Surface(0.06), context.s98Surface(0.02)],
                             ),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            border: Border.all(color: context.s98Surface(0.1)),
                           ),
                           child: Row(
                             children: [
@@ -158,11 +157,11 @@ class _CanzoniVotateScreenState extends State<CanzoniVotateScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(titolo,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                      style: TextStyle(color: context.s98Text, fontWeight: FontWeight.bold, fontSize: 14),
                                       maxLines: 1, overflow: TextOverflow.ellipsis),
                                     const SizedBox(height: 2),
                                     Text(artista,
-                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                      style: TextStyle(color: context.s98TextMuted, fontSize: 12),
                                       maxLines: 1, overflow: TextOverflow.ellipsis),
                                   ],
                                 ),
