@@ -422,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           fit: StackFit.expand,
           children: [
             Container(
-              color: Colors.black,
+              color: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.all(40),
               child: Image.asset(
                 'assets/images/logo_header.png',
