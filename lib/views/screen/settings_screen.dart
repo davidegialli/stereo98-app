@@ -34,15 +34,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _applyTheme(int themeId) {
     _box.write('stereo98_theme_mode', themeId);
-    // Salva l'ultimo tema scuro scelto per l'automatico
     if (themeId != AppThemes.auto) {
       _box.write('stereo98_dark_theme', themeId);
     }
     setState(() => dropdownValue = themeId);
     appThemeNotifier.value = themeId;
-  } else {
-      appThemeNotifier.value = themeId;
-    }
   }
 
   @override
