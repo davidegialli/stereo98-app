@@ -81,11 +81,24 @@ class _MyAppState extends State<MyApp> {
   final storage = Get.put(StorageService());
   final _box = GetStorage();
 
-  // ── AppBar theme condiviso per i temi chiari ────────────────────────────
-  static const _lightAppBarTheme = AppBarTheme(
-    backgroundColor: Color(0xFF0D4A5E),
-    foregroundColor: Colors.white,
-    iconTheme: IconThemeData(color: Colors.white),
+  // ── AppBar themes per temi chiari (abbinati al tema) ─────────────────────
+  static const _chiaroAppBarTheme = AppBarTheme(
+    backgroundColor: Color(0xFFFFFFFF),
+    foregroundColor: Color(0xFF1A1A1A),
+    iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
+    elevation: 0,
+  );
+  static const _rosaCipriaAppBarTheme = AppBarTheme(
+    backgroundColor: Color(0xFFFFF0F5),
+    foregroundColor: Color(0xFF1A1A1A),
+    iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
+    elevation: 0,
+  );
+  static const _azzurroCieloAppBarTheme = AppBarTheme(
+    backgroundColor: Color(0xFFF0F8FF),
+    foregroundColor: Color(0xFF1A1A1A),
+    iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
+    elevation: 0,
   );
 
   // ── TextTheme scuro (per temi chiari) ───────────────────────────────────
@@ -155,7 +168,7 @@ class _MyAppState extends State<MyApp> {
       cardColor: CustomColor.chiaroCard,
       canvasColor: CustomColor.chiaroCanvas,
       iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-      appBarTheme: _lightAppBarTheme,
+      appBarTheme: _chiaroAppBarTheme,
       textTheme: _darkTextTheme,
     ),
     AppThemes.rosaCipria: ThemeData(
@@ -165,7 +178,7 @@ class _MyAppState extends State<MyApp> {
       cardColor: CustomColor.rosaCipriaCard,
       canvasColor: CustomColor.rosaCipriaCanvas,
       iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-      appBarTheme: _lightAppBarTheme,
+      appBarTheme: _rosaCipriaAppBarTheme,
       textTheme: _darkTextTheme,
     ),
     AppThemes.azzurroCielo: ThemeData(
@@ -175,7 +188,7 @@ class _MyAppState extends State<MyApp> {
       cardColor: CustomColor.azzurroCieloCard,
       canvasColor: CustomColor.azzurroCieloCanvas,
       iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
-      appBarTheme: _lightAppBarTheme,
+      appBarTheme: _azzurroCieloAppBarTheme,
       textTheme: _darkTextTheme,
     ),
   });

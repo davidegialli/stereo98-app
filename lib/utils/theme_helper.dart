@@ -52,13 +52,11 @@ extension S98Theme on BuildContext {
       : [const Color(0xFF16213E), const Color(0xFF1A1A2E)];
 
   // ── Home body gradient ──────────────────────────────────────────────────
-  List<Color> get s98BodyGradient => isLightTheme
-      ? [
-          Theme.of(this).primaryColor,
-          Theme.of(this).cardColor,
-          Theme.of(this).canvasColor,
-        ]
-      : [const Color(0xFF1A0A10), const Color(0xFF000000), const Color(0xFF0A0A1A)];
+  List<Color> get s98BodyGradient => [
+        Theme.of(this).primaryColor,
+        Theme.of(this).cardColor,
+        Theme.of(this).canvasColor,
+      ];
 
   // ── AlertDialog background ──────────────────────────────────────────────
   Color get s98DialogBg =>
