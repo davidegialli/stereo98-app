@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stereo98/utils/custom_color.dart';
 import 'package:stereo98/utils/strings.dart';
+import 'package:stereo98/utils/themes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,6 +17,22 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
 
   String _versionText = '';
+
+  /// Colori splash basati sul tema corrente salvato
+  late final _SplashColors _colors = _getSplashColors();
+
+  _SplashColors _getSplashColors() {
+    final box = GetStorage();
+    final savedMode = box.read('stereo98_theme_mode') ?? AppThemes.scuro;
+    int effectiveTheme = savedMode;
+    if (savedMode == AppThemes.auto) {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      final savedDark  = box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+      final savedLight = box.read('stereo98_light_theme') ?? AppThemes.chiaro;
+      effectiveTheme = brightness == Brightness.dark ? savedDark : savedLight;
+    }
+    return _SplashColors.fromTheme(effectiveTheme);
+  }
 
   late AnimationController _enterController;
   late Animation<double> _enterScale;
@@ -147,19 +165,15 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: _colors.bg,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0A0515),
-              Color(0xFF000000),
-              Color(0xFF050A15),
-            ],
+            colors: _colors.gradient,
           ),
         ),
         child: Column(
@@ -179,7 +193,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 28,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: CustomColor.primaryColor,
+                        color: _colors.accent,
                         backgroundColor: CustomColor.gray.withValues(alpha: 0.3),
                       ),
                     ),
@@ -189,8 +203,8 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _versionFade,
                     child: Text(
                       _versionText.isNotEmpty ? _versionText : Strings.version,
-                      style: const TextStyle(
-                        color: Colors.white38,
+                      style: TextStyle(
+                        color: _colors.textMuted,
                         fontSize: 11,
                         letterSpacing: 0.5,
                         decoration: TextDecoration.none,
@@ -239,7 +253,7 @@ class _SplashScreenState extends State<SplashScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFD85D9D).withOpacity(_ringFade.value),
+                        color: _colors.accent.withOpacity(_ringFade.value),
                         width: 3,
                       ),
                     ),
@@ -255,12 +269,12 @@ class _SplashScreenState extends State<SplashScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD85D9D).withOpacity(glowVal * 0.5 * opacity),
+                        color: _colors.accent.withOpacity(glowVal * 0.5 * opacity),
                         blurRadius: 60,
                         spreadRadius: 20,
                       ),
                       BoxShadow(
-                        color: const Color(0xFF4EC8E8).withOpacity(glowVal * 0.3 * opacity),
+                        color: _colors.accentSecondary.withOpacity(glowVal * 0.3 * opacity),
                         blurRadius: 80,
                         spreadRadius: 10,
                       ),
@@ -278,9 +292,10 @@ class _SplashScreenState extends State<SplashScreen>
                     height: logoSize,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
+                      color: _colors.logoBg,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFD85D9D).withOpacity(glowVal * 0.6),
+                          color: _colors.accent.withOpacity(glowVal * 0.4),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -298,5 +313,74 @@ class _SplashScreenState extends State<SplashScreen>
         );
       },
     );
+  }
+}
+
+/// Colori adattivi per lo splash screen in base al tema salvato
+class _SplashColors {
+  final Color bg;
+  final List<Color> gradient;
+  final Color accent;
+  final Color accentSecondary;
+  final Color logoBg;
+  final Color textMuted;
+
+  const _SplashColors({
+    required this.bg,
+    required this.gradient,
+    required this.accent,
+    required this.accentSecondary,
+    required this.logoBg,
+    required this.textMuted,
+  });
+
+  /// Colori per temi scuri — glow leggero, sfondo scuro
+  static _SplashColors _dark(Color primary, Color card, Color canvas) {
+    return _SplashColors(
+      bg: primary,
+      gradient: [
+        Color.lerp(primary, Colors.black, 0.3)!,
+        primary,
+        Color.lerp(canvas, Colors.black, 0.3)!,
+      ],
+      accent: CustomColor.accentFucsia,
+      accentSecondary: CustomColor.accentAzzurro,
+      logoBg: Colors.transparent,
+      textMuted: Colors.white38,
+    );
+  }
+
+  /// Colori per temi chiari — glow leggero, sfondo chiaro
+  static _SplashColors _light(Color primary, Color card, Color canvas) {
+    return _SplashColors(
+      bg: primary,
+      gradient: [primary, card, canvas],
+      accent: CustomColor.accentFucsia.withOpacity(0.6),
+      accentSecondary: CustomColor.accentAzzurro.withOpacity(0.5),
+      logoBg: Colors.transparent,
+      textMuted: Colors.black38,
+    );
+  }
+
+  factory _SplashColors.fromTheme(int themeId) {
+    switch (themeId) {
+      case AppThemes.vivace:
+        return _dark(CustomColor.vivacePrimary, CustomColor.vivaceCard, CustomColor.vivaceCanvas);
+      case AppThemes.bluNotte:
+        return _dark(CustomColor.bluNottePrimary, CustomColor.bluNotteCard, CustomColor.bluNotteCanvas);
+      case AppThemes.amaranto:
+        return _dark(CustomColor.amarantoPrimary, CustomColor.amarantoCard, CustomColor.amarantoCanvas);
+      case AppThemes.grafite:
+        return _dark(CustomColor.grafitePrimary, CustomColor.grafiteCard, CustomColor.grafiteCanvas);
+      case AppThemes.chiaro:
+        return _light(CustomColor.chiaroPrimary, CustomColor.chiaroCard, CustomColor.chiaroCanvas);
+      case AppThemes.rosaCipria:
+        return _light(CustomColor.rosaCipriaPrimary, CustomColor.rosaCipriaCard, CustomColor.rosaCipriaCanvas);
+      case AppThemes.azzurroCielo:
+        return _light(CustomColor.azzurroCieloPrimary, CustomColor.azzurroCieloCard, CustomColor.azzurroCieloCanvas);
+      case AppThemes.scuro:
+      default:
+        return _dark(CustomColor.darkPrimaryColor, CustomColor.darkPrimaryColorOne, CustomColor.darkPrimaryColorTwo);
+    }
   }
 }
