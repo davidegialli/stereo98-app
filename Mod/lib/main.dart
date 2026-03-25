@@ -255,7 +255,9 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Questo widget è DENTRO DynamicTheme, quindi DynamicTheme.of(context) funziona
+// Questo widget è DENTRO DynamicTheme, quindi DynamicTheme.of(context) funziona.
+// Usa MediaQuery.of(context).platformBrightness nel build() per reagire
+// in tempo reale ai cambi di tema del sistema (più affidabile di didChangePlatformBrightness).
 class _AutoThemeListener extends StatefulWidget {
   final GetStorage box;
   final Widget child;
@@ -272,7 +274,6 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _lastBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
   }
 
   @override
@@ -282,23 +283,18 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
   }
 
   @override
-  void didChangePlatformBrightness() {
-    _checkAndApplyAutoTheme();
-  }
-
-  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkAndApplyAutoTheme();
+      _applyAutoIfNeeded();
     }
   }
 
-  void _checkAndApplyAutoTheme() {
+  void _applyAutoIfNeeded() {
     final savedMode = widget.box.read('stereo98_theme_mode') ?? AppThemes.scuro;
     if (savedMode != AppThemes.auto) return;
 
-    final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    if (brightness == _lastBrightness) return; // nessun cambio reale
+    final brightness = MediaQuery.of(context).platformBrightness;
+    if (brightness == _lastBrightness) return;
     _lastBrightness = brightness;
 
     final savedDark  = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
@@ -312,5 +308,23 @@ class _AutoThemeListenerState extends State<_AutoThemeListener> with WidgetsBind
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    // MediaQuery.of(context).platformBrightness causa un rebuild automatico
+    // quando il sistema cambia light/dark — molto più affidabile del callback
+    final brightness = MediaQuery.of(context).platformBrightness;
+    if (brightness != _lastBrightness) {
+      _lastBrightness = brightness;
+      final savedMode = widget.box.read('stereo98_theme_mode') ?? AppThemes.scuro;
+      if (savedMode == AppThemes.auto) {
+        final savedDark  = widget.box.read('stereo98_dark_theme') ?? AppThemes.scuro;
+        final savedLight = widget.box.read('stereo98_light_theme') ?? AppThemes.chiaro;
+        final effectiveTheme = brightness == Brightness.dark ? savedDark : savedLight;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          DynamicTheme.of(context)?.setTheme(effectiveTheme);
+        });
+      }
+    }
+    return widget.child;
+  }
 }
