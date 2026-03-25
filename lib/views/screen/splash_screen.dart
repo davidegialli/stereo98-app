@@ -54,10 +54,22 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _versionController;
   late Animation<double> _versionFade;
 
+  /// Fade da nero ai colori del tema (elimina il salto dalla splash nativa)
+  late AnimationController _bgFadeController;
+  late Animation<double> _bgFade;
+
   @override
   void initState() {
     super.initState();
     _loadVersion();
+
+    _bgFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _bgFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _bgFadeController, curve: Curves.easeOut),
+    );
 
     _enterController = AnimationController(
       vsync: this,
@@ -133,6 +145,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
 
+    _bgFadeController.forward();
     _enterController.forward();
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -153,6 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _bgFadeController.dispose();
     _enterController.dispose();
     _breatheController.dispose();
     _ringController.dispose();
@@ -164,18 +178,26 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _colors.bg,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: _colors.gradient,
-          ),
-        ),
+    return AnimatedBuilder(
+      animation: _bgFade,
+      builder: (context, child) {
+        // Interpola ogni colore del gradiente da nero al colore del tema
+        final fadedGradient = _colors.gradient
+            .map((c) => Color.lerp(Colors.black, c, _bgFade.value)!)
+            .toList();
+
+        return Scaffold(
+          backgroundColor: Color.lerp(Colors.black, _colors.bg, _bgFade.value),
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: fadedGradient,
+              ),
+            ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -217,6 +239,8 @@ class _SplashScreenState extends State<SplashScreen>
           ],
         ),
       ),
+    );
+      },
     );
   }
 
